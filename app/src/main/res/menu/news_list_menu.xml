@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <item android:id="@+id/sort_item"
+        app:showAsAction="ifRoom"
+        android:title="@string/filter"
+        android:icon="@drawable/sort_icon"/>
+
+    <item android:id="@+id/clear_data_base_item"
+        app:showAsAction="ifRoom"
+        android:title="@string/clear_data_base"
+        android:icon="@drawable/clear_data_base_icon"/>
+
+</menu>

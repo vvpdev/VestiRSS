@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">VestiRSS</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_news_list_screen">Вести.Ru</string>
+    <string name="text_category">Категории</string>
+    <string name="filter">фильтр</string>
+    <string name="error_load_news_list">Ошибка загрузки. Проверьте подключение к сети</string>
+
+
+    <!--названия категорий -->
+    <string-array name="title_category_list">
+        <item>Все</item>
+        <item>Общество</item>
+        <item>Спорт</item>
+        <item>В мире</item>
+        <item>Политика</item>
+        <item>Происшествия</item>
+        <item>Экономика</item>
+        <item>Hi-Tech. Интернет</item>
+        <item>Авто.Вести</item>
+        <item>Оборона и безопасность</item>
+        <item>Вести.Наука</item>
+    </string-array>
+
+
+
+    <string name="no_new_data">последние новости уже загружены</string>
+    <string name="new_data_uploaded">новые новости загружены</string>
+    <string name="empty_data_from_db">Сохраненные данные отсутствуют. Потяните, чтобы загрузить свежие новости</string>
+    <string name="empty_data_from_category">В выбранной категории новостей еще нет</string>
+    <string name="clear_data_base">очистить данные</string>
+    <string name="question_delete_all_from_db">Удалить все сохраненные новости?</string>
+    <string name="answer_yes">да</string>
+    <string name="answer_no">нет</string>
+    <string name="data_deleted_successfully">данные успешно удалены</string>
+
+</resources>
