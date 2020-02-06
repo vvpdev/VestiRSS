@@ -13,8 +13,6 @@ interface NewsListView: MvpView {
 
     //SkipStrategy - для отсутствия повторов команды (одиночное выполнение)
 
-    fun setupRecyclerView()
-
     @StateStrategyType(value = SkipStrategy::class)
     fun showProgress(show: Boolean)
 

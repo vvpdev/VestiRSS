@@ -19,7 +19,6 @@ interface MethodsDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNews(news: NewsModel)
 
-
     @Query("DELETE FROM NewsModel")
     fun deleteAllNews()
 

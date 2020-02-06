@@ -18,10 +18,5 @@
         android:id="@+id/newsDetailsFragment"
         android:name="com.vvp.vestirss.fragments.NewsDetailsFragment"
         android:label="fragment_news_details"
-        tools:layout="@layout/fragment_news_details" >
-        <action
-            android:id="@+id/action_newsDetailsFragment_pop"
-            app:popUpTo="@id/newsDetailsFragment"
-            app:popUpToInclusive="true" />
-    </fragment>
+        tools:layout="@layout/fragment_news_details" />
 </navigation>

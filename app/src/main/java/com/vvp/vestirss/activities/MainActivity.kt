@@ -24,7 +24,6 @@ class MainActivity : MvpAppCompatActivity() {
 
         setSupportActionBar(toolbar)
 
-
         navigationController = Navigation.findNavController(this, R.id.navGraphHost)
         NavigationUI.setupActionBarWithNavController(this, navigationController)
 

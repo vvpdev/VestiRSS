@@ -37,8 +37,6 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
         // инжектим переменные
         App.diComponent!!.injectNewsListPresenter(this)
 
-        viewState.setupRecyclerView()
-
         newsList = LinkedList()
 
         // при старте приложения сначала загружаем сохраненные данные из БД

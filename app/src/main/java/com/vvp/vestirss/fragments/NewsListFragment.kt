@@ -53,6 +53,15 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
 
         // swipe для загрузки новых данных
         swipeAction.setOnRefreshListener {   presenter.selectionLoad()  }
+
+
+
+        //setup recyclerView
+        manager = LinearLayoutManager(activity!!.applicationContext, LinearLayoutManager.VERTICAL, false)
+        adapter = AdapterNewsList(this)
+
+        recyclerViewNewsList.layoutManager = manager
+        recyclerViewNewsList.adapter = adapter
     }
 
 
@@ -94,15 +103,6 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
 
     //______________________________
     //view implementation
-
-    override fun setupRecyclerView() {
-        manager = LinearLayoutManager(activity!!.applicationContext, LinearLayoutManager.VERTICAL, false)
-        adapter = AdapterNewsList(this)
-
-        recyclerViewNewsList.layoutManager = manager
-        recyclerViewNewsList.adapter = adapter
-    }
-
 
     // управление показом прогресса
     override fun showProgress(show: Boolean) {
@@ -188,6 +188,25 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
     override fun showButtonToolbar(show: Boolean) {
         button_sort_item.isVisible = show
         button_clear_data.isVisible = show
+    }
+
+
+
+
+    //save scroll position
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable("recState", manager.onSaveInstanceState())
+    }
+
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+
+        if (savedInstanceState != null){
+            manager.onRestoreInstanceState(savedInstanceState.getParcelable("recState"))
+        }
     }
 
 }
