@@ -11,18 +11,14 @@ import com.vvp.vestirss.views.NewsListView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
-import kotlin.collections.ArrayList
-import kotlin.math.roundToInt
 
 
-@Suppress("DEPRECATION")
 @InjectViewState
-class NewsListPresenter: MvpPresenter<NewsListView>() {
+class NewsListPresenter : MvpPresenter<NewsListView>() {
 
     //начальный массив для данных
-    lateinit var newsList: LinkedList<NewsModel>
+    lateinit var newsList: ArrayList<NewsModel>
 
     @Inject
     lateinit var provider: DataProvider
@@ -37,9 +33,9 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
         // инжектим переменные
         App.diComponent!!.injectNewsListPresenter(this)
 
-        newsList = LinkedList()
+        newsList = ArrayList()
 
-        // при старте приложения сначала загружаем сохраненные данные из БД
+        // при старте приложения сначала загружаем сохраненные новости из БД
         loadDataFromDB()
     }
 
@@ -55,7 +51,6 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
     }
 
 
-
     // загрузка из БД
     private fun loadDataFromDB() {
 
@@ -67,7 +62,7 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
 
                 val newsFromDB = methodsDAO.getAllNews()
 
-                // если нет данных в БД
+                // если нет новостей в БД
                 if (newsFromDB.isNullOrEmpty()) {
 
                     CoroutineScope(Dispatchers.Main).launch {
@@ -76,22 +71,19 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
                         viewState.showTextViewMessage(R.string.empty_data_from_db)
                     }
                 } else {
-                    newsList.addAll( methodsDAO.getAllNews() )
+                    newsList.addAll(methodsDAO.getAllNews())
 
-                    // т.к. элементы при записи добавляются в конец таблицы
-                    // реверс при загрузке из БД выводит новые элементы на первые позиции
-
+                    // реверс для правильного отображения по времени
                     newsList.reverse()
 
                     CoroutineScope(Dispatchers.Main).launch {
                         viewState.showProgress(false)
-                        viewState.showNewsList(newsList)
+                        viewState.showNews(newsList = newsList, addNews = false)
                     }
                 }
             }
         }
     }
-
 
 
     // изначальная загрузка новостей из сети
@@ -103,6 +95,7 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
 
             // данные из сети
             val newsFromNetwork = provider.getNewsList().await()
+
             newsList.addAll(newsFromNetwork)
 
             CoroutineScope(Dispatchers.Main).launch {
@@ -112,15 +105,16 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
                 if (newsList.isNullOrEmpty()) {
                     viewState.showMessage(R.string.error_load_news_list)
                 } else {
-                    viewState.showNewsList(newsList)
+                    viewState.showNews(newsList = newsList, addNews = false)
                     viewState.showButtonToolbar(true)
                 }
             }
 
+            // реверс для правильного отображения по времени
+            newsFromNetwork.reverse()
+
             // Запись в БД
             if (!newsFromNetwork.isNullOrEmpty()) {
-
-                newsFromNetwork.reverse()
                 methodsDAO.insertNewsList(newsList = newsFromNetwork)
             }
         }
@@ -133,8 +127,9 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
         viewState.showProgress(true)
 
         // промежуточный массив для отсортированных данных
-        val sortNewsList: LinkedList<NewsModel> = LinkedList()
+        val sortNewsList: ArrayList<NewsModel> = ArrayList()
 
+        // если выбранная категория не равна категории "Все"
         if (selectedCategory != defaultCategory) {
 
             this.newsList.forEach {
@@ -149,18 +144,17 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
             // если нет новостей в выбранной категории
             if (sortNewsList.isEmpty()) {
 
-                viewState.showNewsList(sortNewsList)
+                viewState.showNews(newsList = sortNewsList, addNews = false)
                 viewState.showTextViewMessage("В категории $selectedCategory новостей еще нет")
             } else {
-                viewState.showNewsList(sortNewsList)
+                viewState.showNews(newsList = sortNewsList, addNews = false)
             }
 
         } else {
             viewState.showProgress(false)
-            viewState.showNewsList(newsList)
+            viewState.showNews(newsList = newsList, addNews = false)
         }
     }
-
 
 
     // подгрузка новых новостей
@@ -175,14 +169,8 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
 
             if (!loadedData.isNullOrEmpty()) {
 
-                // конвертирование даты первой новости массива, отображенного в recyclerView
-                val firstPubDateInt = (((Date(newsList.first.pubDate)).time) / 1000).toDouble().roundToInt()
-
-                // конвертирование даты первой новости массива, загруженного из сети
-                val newFirstPubDateInt = ((((Date(loadedData[0].pubDate)).time) / 1000).toDouble().roundToInt())
-
-                // если первые даты совпадают - обновление списка не требуется
-                if (newFirstPubDateInt == firstPubDateInt) {
+                // если первые заголовки совпадают - обновление списка не требуется
+                if (loadedData[0].title == newsList[0].title) {
 
                     CoroutineScope(Dispatchers.Main).launch {
                         viewState.showProgress(false)
@@ -193,14 +181,13 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
                     // промежуточный массив для данных, отобранных как новые
                     val freshData: ArrayList<NewsModel> = ArrayList()
 
-                    for (i in 0..loadedData.size) {
+                    for (i in 0..loadedData.count()) {
 
                         // отбираем новые данные по дате публикации
-                        if ( ((((Date(loadedData[i].pubDate)).time) / 1000).toDouble().roundToInt()) >  firstPubDateInt ) {
+                        if (loadedData[i].title != newsList[0].title) {
 
                             freshData.add(loadedData[i])
-                        }
-                        else{
+                        } else {
 
                             //когда проверка доходит до новости, являющейся первой в исходном массиве
                             break
@@ -209,15 +196,13 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
 
                     freshData.reverse()
 
-                    // загружаем на экран в соответствии с датой  - самые новые новости будут вверху списка
-                    freshData.forEach {
-                        newsList.addFirst(it)
-                    }
-
                     // обновление UI
                     CoroutineScope(Dispatchers.Main).launch {
                         viewState.showProgress(false)
-                        viewState.showNewsList(newsList)
+
+                        //viewState.showNewsList(newsList)
+                        viewState.showNews(newsList = freshData, addNews = true)
+
                         viewState.showMessage(R.string.new_data_uploaded)
                     }
 
@@ -246,14 +231,13 @@ class NewsListPresenter: MvpPresenter<NewsListView>() {
 
             CoroutineScope(Dispatchers.Main).launch {
                 viewState.showProgress(false)
-                viewState.showNewsList(newsList)
+                viewState.showNews(newsList = newsList, addNews = false)
                 viewState.showMessage(R.string.data_deleted_successfully)
                 viewState.showTextViewMessage(R.string.empty_data_from_db)
                 viewState.showButtonToolbar(false)
             }
         }
     }
-
 
 
 }

@@ -9,7 +9,6 @@ import com.vvp.vestirss.views.NewsDetailsView
 @InjectViewState
 class NewsDetailsPresenter: MvpPresenter<NewsDetailsView>() {
 
-
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
 
@@ -22,5 +21,4 @@ class NewsDetailsPresenter: MvpPresenter<NewsDetailsView>() {
         viewState.showDataOnScreen(news)
         viewState.showProgress(false)
     }
-
 }

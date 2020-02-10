@@ -20,7 +20,6 @@ import kotlinx.android.synthetic.main.fragment_news_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
 
 class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.onClickListener {
 
@@ -31,9 +30,8 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
     private lateinit var manager: LinearLayoutManager
 
     // для кнопок в тулбаре
-    private lateinit var button_sort_item: MenuItem
-    private lateinit var button_clear_data: MenuItem
-
+    private lateinit var buttonSortItem: MenuItem
+    private lateinit var buttonClearData: MenuItem
 
 
     override fun onCreateView(
@@ -55,7 +53,6 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
         swipeAction.setOnRefreshListener {   presenter.selectionLoad()  }
 
 
-
         //setup recyclerView
         manager = LinearLayoutManager(activity!!.applicationContext, LinearLayoutManager.VERTICAL, false)
         adapter = AdapterNewsList(this)
@@ -66,18 +63,16 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
 
 
 
-
     // toolbar
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
 
         inflater.inflate(R.menu.news_list_menu, menu)
 
         // инициализируем кнопки
-        button_sort_item = menu.findItem(R.id.sort_item)
-        button_clear_data = menu.findItem(R.id.clear_data_base_item)
+        buttonSortItem = menu.findItem(R.id.sort_item)
+        buttonClearData = menu.findItem(R.id.clear_data_base_item)
 
         super.onCreateOptionsMenu(menu, inflater)
-
 
         // только при первом открытии программы
         if (presenter.newsList.isNullOrEmpty()){
@@ -100,7 +95,6 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
 
 
 
-
     //______________________________
     //view implementation
 
@@ -109,11 +103,22 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
         swipeAction.isRefreshing = show
     }
 
+
     // отображение списка новостей
-    override fun showNewsList(newsLIst: LinkedList<NewsModel>) {
+    override fun showNews(newsList: ArrayList<NewsModel>, addNews: Boolean) {
+
         textViewMessage.visibility = View.GONE
-        adapter.setupAdapter(newsLIst)
+
+        // добавление новых новостей
+        if (addNews){
+            adapter.addNews(newsList)
+        }
+        else{
+            // обновление списка новостей
+            adapter.updateNews(newsList)
+        }
     }
+
 
     override fun showMessage(message: Int) {
         Toast.makeText(activity, getText(message), Toast.LENGTH_SHORT).show()
@@ -186,10 +191,9 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
 
     // скрытие/отображение кнопок в тулбаре
     override fun showButtonToolbar(show: Boolean) {
-        button_sort_item.isVisible = show
-        button_clear_data.isVisible = show
+        buttonSortItem.isVisible = show
+        buttonClearData.isVisible = show
     }
-
 
 
 
@@ -200,7 +204,6 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
         outState.putParcelable("recState", manager.onSaveInstanceState())
     }
 
-
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
 
@@ -208,5 +211,4 @@ class NewsListFragment : MvpAppCompatFragment(), NewsListView, AdapterNewsList.o
             manager.onRestoreInstanceState(savedInstanceState.getParcelable("recState"))
         }
     }
-
 }

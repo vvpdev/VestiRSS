@@ -7,7 +7,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
     // класс-модель для новости
-    // тип Parcelable - для возвожности передачи всего объекта
+    // тип Parcelable - для возможности передачи всего объекта
     // к экрану деталировки без разбора на поля
 
 

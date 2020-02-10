@@ -2,6 +2,7 @@ package com.vvp.vestirss.repository.network.retrofit
 
 import android.util.Log
 import com.vvp.vestirss.App
+import com.vvp.vestirss.converters.DataConverter
 import com.vvp.vestirss.repository.NewsModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -13,6 +14,9 @@ class DataProvider {
 
     @Inject
     lateinit var retrofitFactory: RetrofitFactory
+
+    @Inject
+    lateinit var converter: DataConverter
 
     init {
         App.diComponent!!.injectDataProvider(this)
@@ -33,18 +37,7 @@ class DataProvider {
 
                     val responseItems = retrofitFactory.getRssService().getRssData().body()!!.channel!!.items
 
-                    // передаем данные в класс - модель
-                    responseItems!!.forEach { newsList.add(
-
-                        NewsModel(
-                            title = it.title,
-                            pubDate = it.pubDate!!,
-                            category = it.category,
-                            imageUrl = it.enclosure!![0].url,
-                            fullText = it.yandexFullText
-                        )
-                    )
-                    }
+                    newsList.addAll(converter.convert(responseItems!!))
                 }
 
                 else{

@@ -6,6 +6,7 @@ import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
 import com.vvp.vestirss.repository.NewsModel
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 @StateStrategyType(value = AddToEndStrategy::class)
@@ -16,7 +17,7 @@ interface NewsListView: MvpView {
     @StateStrategyType(value = SkipStrategy::class)
     fun showProgress(show: Boolean)
 
-    fun showNewsList(newsLIst: LinkedList<NewsModel>)
+    fun showNews(newsList: ArrayList<NewsModel>, addNews: Boolean)
 
     @StateStrategyType(value = SkipStrategy::class)
     fun showMessage(message: Int)

@@ -85,6 +85,7 @@ class NewsDetailsFragment : MvpAppCompatFragment(), NewsDetailsView {
                 .with(this)
                 .load(url)
                 .centerCrop()
+                .placeholder(R.drawable.placeholder)      // если изображение не загружено
                 .into(imageNews)
         }
     }

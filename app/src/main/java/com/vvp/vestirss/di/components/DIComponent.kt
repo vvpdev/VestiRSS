@@ -1,15 +1,13 @@
 package com.vvp.vestirss.di.components
 
-import com.vvp.vestirss.di.modules.DataProviderModule
-import com.vvp.vestirss.di.modules.NewsDateBaseModul
-import com.vvp.vestirss.di.modules.RetrofitModul
+import com.vvp.vestirss.di.modules.*
 import com.vvp.vestirss.presenters.NewsDetailsPresenter
 import com.vvp.vestirss.presenters.NewsListPresenter
 import com.vvp.vestirss.repository.network.retrofit.DataProvider
 import dagger.Component
 
 
-@Component(modules = [DataProviderModule::class, NewsDateBaseModul::class, RetrofitModul::class])
+@Component(modules = [DataProviderModule::class, NewsDateBaseModul::class, RetrofitModul::class, ConverterModule::class])
 interface DIComponent {
 
     // инжектирование всех переменных

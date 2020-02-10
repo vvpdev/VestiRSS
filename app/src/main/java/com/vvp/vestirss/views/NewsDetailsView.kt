@@ -7,7 +7,7 @@ import com.vvp.vestirss.repository.NewsModel
 
 
 @StateStrategyType(value = AddToEndStrategy::class)
-interface NewsDetailsView: MvpView {
+interface NewsDetailsView : MvpView {
 
         fun getNewsData()
 
