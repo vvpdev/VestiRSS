@@ -1,4 +1,4 @@
-package com.vvp.vestirss.repository
+package com.vvp.vestirss.repository.models
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -14,11 +14,14 @@ import androidx.room.PrimaryKey
 @Entity
 data class NewsModel(
 
+
+    @PrimaryKey (autoGenerate = true)
+    @NonNull
+    var id: Int? = null,
+
     var title: String? = null,
 
-    @PrimaryKey
-    @NonNull
-    var pubDate: String = "",
+    var pubDate: String? = "",
 
     var category: String? = null,
 
@@ -28,14 +31,16 @@ data class NewsModel(
 
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
+        parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readString(),
-        parcel.readString()!!,
+        parcel.readString(),
         parcel.readString(),
         parcel.readString(),
         parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeValue(id)
         parcel.writeString(title)
         parcel.writeString(pubDate)
         parcel.writeString(category)

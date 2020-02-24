@@ -3,7 +3,7 @@ package com.vvp.vestirss.repository.network.retrofit
 import android.util.Log
 import com.vvp.vestirss.App
 import com.vvp.vestirss.converters.DataConverter
-import com.vvp.vestirss.repository.NewsModel
+import com.vvp.vestirss.repository.models.NewsModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers

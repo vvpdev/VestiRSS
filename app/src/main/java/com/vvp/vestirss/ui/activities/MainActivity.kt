@@ -1,17 +1,17 @@
-package com.vvp.vestirss.activities
+package com.vvp.vestirss.ui.activities
 
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
-import com.arellomobile.mvp.MvpAppCompatActivity
 import com.vvp.vestirss.R
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : MvpAppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
 
     private lateinit var navigationController: NavController
@@ -30,6 +30,4 @@ class MainActivity : MvpAppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration(navigationController.graph)
         toolbar.setupWithNavController(navigationController, appBarConfiguration)
     }
-
-
 }

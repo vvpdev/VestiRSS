@@ -1,6 +1,6 @@
 package com.vvp.vestirss.converters
 
-import com.vvp.vestirss.repository.NewsModel
+import com.vvp.vestirss.repository.models.NewsModel
 import com.vvp.vestirss.repository.network.xml_models.Item
 
 class DataConverter {
@@ -23,13 +23,12 @@ class DataConverter {
             )
         }
 
-
-        val indexPlus = newsList[0].pubDate.indexOf("+")
-        val lastIndex = newsList[0].pubDate.lastIndex
+        val indexPlus: Int = newsList[0].pubDate?.indexOf("+")!!
+        val lastIndex: Int = newsList[0].pubDate?.lastIndex!!
 
         newsList.forEach {
 
-            val newData = it.pubDate.removeRange(indexPlus.. lastIndex)
+            val newData = it.pubDate?.removeRange(indexPlus .. lastIndex)
 
             it.pubDate = newData
         }

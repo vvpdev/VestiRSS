@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.vvp.vestirss.repository.NewsModel
+import com.vvp.vestirss.repository.models.NewsModel
 
 
 @Dao

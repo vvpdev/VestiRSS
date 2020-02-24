@@ -6,7 +6,7 @@ import dagger.Provides
 
 
 @Module
-class RetrofitModul {
+class RetrofitModule {
 
     @Provides
     fun provideRetrofitFactory(): RetrofitFactory{

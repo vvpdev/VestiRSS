@@ -1,7 +1,7 @@
 package com.vvp.vestirss.utils
 
 import androidx.recyclerview.widget.DiffUtil
-import com.vvp.vestirss.repository.NewsModel
+import com.vvp.vestirss.repository.models.NewsModel
 import java.util.*
 import kotlin.collections.ArrayList
 

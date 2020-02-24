@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         android:name=".App">
-        <activity android:name="com.vvp.vestirss.activities.MainActivity">
+        <activity android:name="com.vvp.vestirss.ui.activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

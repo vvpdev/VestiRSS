@@ -10,7 +10,7 @@ import dagger.Provides
 
 
 @Module
-class NewsDateBaseModul {
+class NewsDateBaseModule {
 
     @Provides
     fun provideContext(): Context {

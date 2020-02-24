@@ -3,11 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.NewsListFragment">
+    tools:context=".ui.fragments.NewsListFragment">
 
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeAction"
+        android:id="@+id/swipeLoadNews"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -30,6 +30,4 @@
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:visibility="visible" />
-
-
 </FrameLayout>

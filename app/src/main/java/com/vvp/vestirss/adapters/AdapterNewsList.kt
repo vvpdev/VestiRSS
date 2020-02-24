@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.vvp.vestirss.R
-import com.vvp.vestirss.repository.NewsModel
+import com.vvp.vestirss.repository.models.NewsModel
 import com.vvp.vestirss.utils.NewsDiffUtils
 import java.util.*
 import kotlin.collections.ArrayList
@@ -33,6 +33,8 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
 
         listNews.clear()
 
+        newList.sortByDescending { it.pubDate }
+
         listNews.addAll(newList)
 
         diffResult.dispatchUpdatesTo(this)
@@ -44,8 +46,6 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
 
         val diffUtil = NewsDiffUtils(oldList = listNews, newsList = newList)
         val diffResult: DiffUtil.DiffResult = DiffUtil.calculateDiff(diffUtil)
-
-        newList.reverse()
 
         newList.forEach {
             listNews.addFirst(it)
