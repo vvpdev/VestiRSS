@@ -41,12 +41,12 @@ class DataProvider {
                 }
 
                 else{
-                    Log.i("DataProvider", "response is fail")
+                    Log.i("VestiRSS_Log", "response is fail")
                 }
             }
 
             catch (e: Exception){
-                Log.i("DataProvider", "network is not available")
+                Log.i("VestiRSS_Log", "network is not available")
             }
 
             return@async newsList

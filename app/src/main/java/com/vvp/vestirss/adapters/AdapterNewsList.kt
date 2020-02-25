@@ -25,24 +25,11 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
     private var listNews: LinkedList<NewsModel> = LinkedList()
 
 
-    // изначальная загрузка / загрузка массива отсортированных по категории новостей
+    // обновление массива новостей
     fun updateNews(newList: ArrayList<NewsModel>){
 
-        val diffUtil = NewsDiffUtils(oldList = listNews, newsList = newList)
-        val diffResult: DiffUtil.DiffResult = DiffUtil.calculateDiff(diffUtil)
-
-        listNews.clear()
-
-        newList.sortByDescending { it.pubDate }
-
-        listNews.addAll(newList)
-
-        diffResult.dispatchUpdatesTo(this)
-    }
-
-
-    // добавление новых новостей
-    fun addNews(newList: ArrayList<NewsModel>){
+        // сортировка по возрастанию времени
+        newList.sortBy { it.pubDate }
 
         val diffUtil = NewsDiffUtils(oldList = listNews, newsList = newList)
         val diffResult: DiffUtil.DiffResult = DiffUtil.calculateDiff(diffUtil)
@@ -50,8 +37,16 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
         newList.forEach {
             listNews.addFirst(it)
         }
+
         diffResult.dispatchUpdatesTo(this)
     }
+
+    // очистка списка
+    fun clearNewsList(){
+        listNews.clear()
+        notifyDataSetChanged()
+    }
+
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

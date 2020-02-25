@@ -16,10 +16,9 @@ interface MethodsDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNewsList(newsList: List<NewsModel>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertNews(news: NewsModel)
-
     @Query("DELETE FROM NewsModel")
     fun deleteAllNews()
 
+    @Query("SELECT * FROM NewsModel where category = :category")
+    fun getNewsSelectedCategory(category: String): List<NewsModel>
 }

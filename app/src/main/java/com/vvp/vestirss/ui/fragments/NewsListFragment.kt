@@ -1,19 +1,25 @@
 package com.vvp.vestirss.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
-import androidx.core.os.bundleOf
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
 import com.vvp.vestirss.adapters.AdapterNewsList
 import com.vvp.vestirss.repository.models.NewsModel
+import com.vvp.vestirss.utils.NewsListStates
 import com.vvp.vestirss.viewmodels.NewsListViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_news_list.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
 
@@ -23,11 +29,6 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
     // for recyclerView
     private lateinit var manager: LinearLayoutManager
     private lateinit var adapter: AdapterNewsList
-
-    // для кнопок в тулбаре
-    private lateinit var buttonSortItem: MenuItem
-    private lateinit var buttonClearData: MenuItem
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,13 +44,8 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
         // заголовк в тулбаре
         activity!!.toolbar.title = getString(R.string.title_news_list_screen)
 
-
         // привязка viewModel к фрагменту
         newsViewModel = ViewModelProvider(this).get(NewsListViewModel::class.java)
-
-
-        // toolbar menu на этом фрагменте
-        setHasOptionsMenu(true)
 
 
         //setup recyclerView
@@ -59,173 +55,174 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
         recyclerViewNewsList.adapter = adapter
 
 
-        // массив новостей
-        newsViewModel.newsList.observe(viewLifecycleOwner, Observer {
+        // наблюдение за заполненностью БД
+        newsViewModel.isSavedNews.observe(viewLifecycleOwner, Observer {
 
-            if (it.isNullOrEmpty()){
-                textViewMessage.text = getText(R.string.empty_data_from_db)
-            } else{
-                adapter.updateNews(newList = it) }
-            })
+            if (it == true){
+                setHasOptionsMenu(true)     // toolbar menu на этом фрагменте
+                Log.i("VestiRSS_Log", "NewsListFragment observe for isSavedNews = $it")
+            } else {
+                setHasOptionsMenu(false)
+                Log.i("VestiRSS_Log", "NewsListFragment observe for isSavedNews = $it")
+            }
+        })
 
 
-        // переменная загрузки
-        newsViewModel.isLoading.observe(viewLifecycleOwner, Observer { swipeLoadNews.isRefreshing = it })
+        // наблюдение за текущим состоянием
+        newsViewModel.newsListState.observe(viewLifecycleOwner, Observer {
+
+            when (it) {
+
+                // состояние загрузки
+                is NewsListStates.LoadingState -> {
+                    swipeLoadNews.isRefreshing = true
+                    textViewMessage.visibility = View.GONE
+                }
+
+
+                // изначальный state, когда загрузка идет из БД
+                is NewsListStates.LoadedFromDBState -> {
+                    swipeLoadNews.isRefreshing = false
+
+                    if (it.newsList.isNullOrEmpty()) {
+                        textViewMessage.visibility = View.VISIBLE
+                        textViewMessage.text = getText(R.string.empty_data_from_db)
+                    } else {
+                        textViewMessage.visibility = View.GONE
+                        adapter.updateNews(newList = it.newsList)
+                    }
+                }
+
+                // изначальная загрузка из сети, когда БД пустая
+                is NewsListStates.InitLoadFromNetworkState -> {
+                    swipeLoadNews.isRefreshing = false
+
+                    if (it.newsList.isNullOrEmpty()) {
+                        textViewMessage.visibility = View.VISIBLE
+                        textViewMessage.text = getText(R.string.error_load_news_list)
+                    } else {
+                        textViewMessage.visibility = View.GONE
+                        adapter.updateNews(newList = it.newsList)
+                    }
+                }
+
+                // подгрузка новых новостей
+                is NewsListStates.LoadNewDataState -> {
+                    swipeLoadNews.isRefreshing = false
+                    textViewMessage.visibility = View.GONE
+
+                    if (it.isNew) {
+                        Toast.makeText(
+                            activity,
+                            getText(R.string.new_data_uploaded),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        adapter.updateNews(newList = it.newsList)
+                    } else {
+                        Toast.makeText(activity, getText(R.string.no_new_data), Toast.LENGTH_SHORT)
+                            .show()
+                        adapter.updateNews(newList = it.newsList)
+                    }
+                }
+
+                // сортировка по категориям
+                is NewsListStates.SortState -> {
+
+                    if (it.newsList.isNullOrEmpty()) {
+                        recyclerViewNewsList.visibility = View.GONE
+                        textViewMessage.visibility = View.VISIBLE
+                        textViewMessage.text = getText(R.string.empty_data_from_category)
+                    } else {
+                        recyclerViewNewsList.visibility = View.VISIBLE
+                        textViewMessage.visibility = View.GONE
+                        adapter.updateNews(newList = it.newsList)
+                    }
+                }
+
+                is NewsListStates.EmptyDBState -> {
+                    swipeLoadNews.isRefreshing = false
+                    textViewMessage.visibility = View.VISIBLE
+                    textViewMessage.text = getText(R.string.empty_data_from_db)
+                }
+            }
+        })
 
 
         // swipe для загрузки новых данных
-        swipeLoadNews.setOnRefreshListener {  newsViewModel.updateNewsList()  }
+        swipeLoadNews.setOnRefreshListener {  newsViewModel.separateLoad()  }
     }
 
 
-
-    // toolbar
+    // toolbar menu
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
 
         inflater.inflate(R.menu.news_list_menu, menu)
-
-        // инициализируем кнопки
-        buttonSortItem = menu.findItem(R.id.sort_item)
-        buttonClearData = menu.findItem(R.id.clear_data_base_item)
-
         super.onCreateOptionsMenu(menu, inflater)
-
-//        // только при первом открытии программы
-//        if (presenter.newsList.isNullOrEmpty()){
-//            showButtonToolbar(false)
-//        }
-//        else{
-//            showButtonToolbar(true)
-//        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when(item.itemId){
-            R.id.sort_item -> {    }                        // Dialog с категориями для сортировки
-
-            R.id.clear_data_base_item -> {    }       // Dialog с вопросом о удалении
+            R.id.sort_item -> {  showSortScreen()  }                        // показ AlertDialog с категориями для сортировки
+            R.id.clear_data_base_item -> {  showDialogForClearDB()  }       // показ AlertDialog с вопросом о удалении
         }
         return super.onOptionsItemSelected(item)
     }
 
 
-
-    //______________________________
-    //view implementation
-
-    // управление показом прогресса
-//    override fun showProgress(show: Boolean) {
-//
-//        swipeAction.isRefreshing = show
-//        recyclerViewNewsList.isEnabled = show
-//    }
-//
-//
-//    // отображение списка новостей
-//    override fun showNews(newsList: ArrayList<NewsModel>, addNews: Boolean) {
-//
-//        textViewMessage.visibility = View.GONE
-//
-//        // добавление новых новостей
-//        if (addNews){
-//            adapter.addNews(newsList)
-//        }
-//        else{
-//            // обновление списка новостей
-//            adapter.updateNews(newsList)
-//        }
-//    }
-//
-//
-//    override fun showMessage(message: Int) {
-//        Toast.makeText(activity, getText(message), Toast.LENGTH_SHORT).show()
-//    }
-//
-//    override fun showMessage(message: String) {
-//        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
-//    }
-//
-//
     // переход к фрагменту деталировки и передача выбранной новости
     override fun onClick(view: View, news: NewsModel) {
+        Toast.makeText(activity, "выбранный элемент № ${news.id}", Toast.LENGTH_SHORT).show()
 
-        val newsBundle: Bundle = bundleOf("selectedNewsItem" to news)
-        findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
+//        val newsBundle: Bundle = bundleOf("selectedNewsItem" to news)
+//        findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
     }
-//
-//
-//    // отображение категорий сортировки
-//    override fun showSortScreen() {
-//
-//        val categoryList = resources.getStringArray(R.array.title_category_list)
-//
-//        AlertDialog.Builder(activity)
-//            .setTitle(R.string.text_category)
-//            .setItems(categoryList) { _, which ->
-//
-//                // передаем презентеру выбранную категорию
-//                presenter.sortingNewsList(categoryList[which], categoryList[0])
-//            }
-//            .create()
-//            .show()
-//    }
-//
-//
-//    // показ сообщений в textView на главном экране
-//    override fun showTextViewMessage(message: Int) {
-//
-//        textViewMessage.visibility = View.VISIBLE
-//        textViewMessage.text = getString(message)
-//    }
-//
-//    override fun showTextViewMessage(message: String) {
-//        textViewMessage.visibility = View.VISIBLE
-//        textViewMessage.text = message
-//    }
-//
-//
-//    override fun showDialogForClearDB() {
-//
-//        AlertDialog.Builder(activity!!)
-//            .setTitle(R.string.question_delete_all_from_db)
-//
-//            .setPositiveButton(R.string.answer_yes) { _, _ ->
-//                presenter.clearDateBase()
-//
-//                // очистить кэш изображений
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    Glide.get(activity!!).clearDiskCache()
-//                }
-//            }
-//            .setNegativeButton(R.string.answer_no) { dialog, _ ->
-//                dialog.cancel()
-//            }
-//            .setCancelable(true)
-//            .create()
-//            .show()
-//    }
-//
-//
-//    // скрытие/отображение кнопок в тулбаре
-//    override fun showButtonToolbar(show: Boolean) {
-//        buttonSortItem.isVisible = show
-//        buttonClearData.isVisible = show
-//    }
-//
-//
-//    //save scroll position
-//
-//    override fun onSaveInstanceState(outState: Bundle) {
-//        super.onSaveInstanceState(outState)
-//        outState.putParcelable("recState", manager.onSaveInstanceState())
-//    }
-//
-//    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-//        super.onViewStateRestored(savedInstanceState)
-//
-//        if (savedInstanceState != null){
-//            manager.onRestoreInstanceState(savedInstanceState.getParcelable("recState"))
-//        }
-//    }
+
+
+
+    override fun onResume() {
+        super.onResume()
+        newsViewModel.loadFromDB()
+    }
+
+
+
+    // отображение категорий сортировки
+    private fun showSortScreen() {
+
+        val categoryList = resources.getStringArray(R.array.title_category_list)
+
+        activity?.let {
+            AlertDialog.Builder(it)
+                .setTitle(R.string.text_category)
+                .setItems(categoryList) { _, which ->
+                    newsViewModel.loadNewsFromCategory(category = categoryList[which])
+                }
+                .create()
+                .show()
+        }
+    }
+
+    // запрос на удаление
+    private fun showDialogForClearDB() {
+
+        AlertDialog.Builder(activity!!)
+            .setTitle(R.string.question_delete_all_from_db)
+
+            .setPositiveButton(R.string.answer_yes) { _, _ ->
+                newsViewModel.clearDB()
+                adapter.clearNewsList()
+
+                // очистить кэш изображений
+                CoroutineScope(Dispatchers.IO).launch {
+                    Glide.get(activity!!).clearDiskCache()
+                }
+            }
+            .setNegativeButton(R.string.answer_no) { dialog, _ ->
+                dialog.cancel()
+            }
+            .setCancelable(true)
+            .create()
+            .show()
+    }
 }
