@@ -8,7 +8,6 @@
     <string name="filter">фильтр</string>
     <string name="error_load_news_list">Ошибка загрузки. Проверьте подключение к сети</string>
 
-
     <!--названия категорий -->
     <string-array name="title_category_list">
         <item>Все</item>

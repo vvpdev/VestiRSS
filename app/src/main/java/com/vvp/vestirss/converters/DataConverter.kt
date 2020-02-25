@@ -5,7 +5,7 @@ import com.vvp.vestirss.repository.network.xml_models.Item
 
 class DataConverter {
 
-    // конвертирование xml модели в класс-модель
+    // конвертирование xml модели в data класс
     fun convert(responseItems: List<Item>): ArrayList<NewsModel> {
 
         val newsList: ArrayList<NewsModel> = ArrayList()

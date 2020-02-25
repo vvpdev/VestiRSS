@@ -1,6 +1,5 @@
 package com.vvp.vestirss.repository
 
-import android.util.Log
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.datebase.MethodsDAO
 import com.vvp.vestirss.repository.models.NewsModel
@@ -23,7 +22,7 @@ class RepositoryClass {
     }
 
 
-    suspend fun sizeNewsInDB(): Int{
+    fun sizeNewsInDB(): Int{
         return methodsDAO.getAllNews().size
     }
 
@@ -31,9 +30,9 @@ class RepositoryClass {
     // загрузка из БД
     fun loadFromDB(): Deferred<ArrayList<NewsModel>> {
 
-        val loadFromDB: ArrayList<NewsModel> = ArrayList()
-
         return CoroutineScope(Dispatchers.IO).async {
+
+            val loadFromDB: ArrayList<NewsModel> = ArrayList()
             loadFromDB. addAll( methodsDAO.getAllNews() )
             return@async loadFromDB
         }
@@ -46,7 +45,6 @@ class RepositoryClass {
             methodsDAO.deleteAllNews()
         }
     }
-
 
 
     // начальное получение данных из сети и запись в БД
@@ -63,7 +61,6 @@ class RepositoryClass {
                 initialNewsList.sortBy { it.pubDate }
 
                 methodsDAO.insertNewsList(newsList = initialNewsList)
-                Log.i("VestiRSS_Log", "RepositoryClass (loadInitialData) записано в БД = ${initialNewsList.size}")
 
                 initialNewsList.clear()
                 initialNewsList.addAll( methodsDAO.getAllNews() )
@@ -71,7 +68,6 @@ class RepositoryClass {
             return@async initialNewsList
         }
     }
-
 
 
     // подгрузка новых данных
@@ -86,13 +82,11 @@ class RepositoryClass {
 
             val newData = provider.getNewsList().await()
 
-            if (newData.isNotEmpty()){
+            if (!newData.isNullOrEmpty()){
 
                 // проверка заголовков на совпадение
-                if (lastTitle == newData[0].title) {
+                if (lastTitle != newData[0].title) {
 
-                    Log.i("VestiRSS_Log", "новых новостей нет")
-                } else {
                     for (i in 0..newData.lastIndex) {
                         if (newData[i].title != lastTitle) {
                             freshData.add(newData[i])
@@ -102,25 +96,22 @@ class RepositoryClass {
                         }
                     }
 
-                    Log.i("VestiRSS_Log", "количество новых элементов = ${freshData.size}")
-
                     // записываем в БД (сортировка по возрастанию времени)
                     freshData.sortBy { it.pubDate }
                     methodsDAO.insertNewsList(newsList = freshData)
-                    Log.i("VestiRSS_Log", "RepositoryClass (loadNewData) записано в БД  = ${freshData.size}")
 
                     freshData.clear()
-                    freshData.addAll(  methodsDAO.getAllNews() )
-
-                    Log.i("VestiRSS_Log", "RepositoryClass (loadNewData) получено из БД  = ${freshData.size}")
+                    freshData.addAll(methodsDAO.getAllNews())
                 }
             }
+            newData.clear()
 
             return@async freshData
         }
     }
 
 
+    // выбор новостей по категориям
     fun selectNewsForCategory(category: String): ArrayList<NewsModel>{
 
         // массив для отобранных по категории новостей
@@ -130,13 +121,19 @@ class RepositoryClass {
 
             if (category != "Все"){
                 sortList.addAll( methodsDAO.getNewsSelectedCategory(category = category) )
-
-                Log.i("VestiRSS_Log", "RepositoryClass (selectNewsForCategory) количество в категории = ${sortList.size} ")
             } else {
                 sortList.addAll( methodsDAO.getAllNews())
             }
         }
-
         return sortList
     }
+
+
+    // получить новость по Id
+    fun getNewsById(id: Int): Deferred<NewsModel>{
+        return CoroutineScope(Dispatchers.IO).async {
+            return@async methodsDAO.getNewsById(id = id)
+        }
+    }
+
 }

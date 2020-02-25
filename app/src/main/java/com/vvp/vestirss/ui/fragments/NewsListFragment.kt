@@ -1,13 +1,13 @@
 package com.vvp.vestirss.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
 
     // viewModel для экрана списка новостей
-    private lateinit var newsViewModel: NewsListViewModel
+    private lateinit var viewModel: NewsListViewModel
 
     // for recyclerView
     private lateinit var manager: LinearLayoutManager
@@ -45,7 +45,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
         activity!!.toolbar.title = getString(R.string.title_news_list_screen)
 
         // привязка viewModel к фрагменту
-        newsViewModel = ViewModelProvider(this).get(NewsListViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(NewsListViewModel::class.java)
 
 
         //setup recyclerView
@@ -56,33 +56,23 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
 
 
         // наблюдение за заполненностью БД
-        newsViewModel.isSavedNews.observe(viewLifecycleOwner, Observer {
+        viewModel.isSavedNews.observe(viewLifecycleOwner, Observer {
 
             if (it == true){
-                setHasOptionsMenu(true)     // toolbar menu на этом фрагменте
-                Log.i("VestiRSS_Log", "NewsListFragment observe for isSavedNews = $it")
+                setHasOptionsMenu(true)
             } else {
                 setHasOptionsMenu(false)
-                Log.i("VestiRSS_Log", "NewsListFragment observe for isSavedNews = $it")
             }
         })
 
 
-        // наблюдение за текущим состоянием
-        newsViewModel.newsListState.observe(viewLifecycleOwner, Observer {
+        // изменение текущего состояния
+        viewModel.statesList.observe(viewLifecycleOwner, Observer {
 
             when (it) {
 
-                // состояние загрузки
-                is NewsListStates.LoadingState -> {
-                    swipeLoadNews.isRefreshing = true
-                    textViewMessage.visibility = View.GONE
-                }
-
-
-                // изначальный state, когда загрузка идет из БД
+                // изначальное состояние, когда загрузка идет из БД
                 is NewsListStates.LoadedFromDBState -> {
-                    swipeLoadNews.isRefreshing = false
 
                     if (it.newsList.isNullOrEmpty()) {
                         textViewMessage.visibility = View.VISIBLE
@@ -93,14 +83,14 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
                     }
                 }
 
-                // изначальная загрузка из сети, когда БД пустая
+                // загрузка из сети, когда БД пустая
                 is NewsListStates.InitLoadFromNetworkState -> {
-                    swipeLoadNews.isRefreshing = false
 
                     if (it.newsList.isNullOrEmpty()) {
                         textViewMessage.visibility = View.VISIBLE
                         textViewMessage.text = getText(R.string.error_load_news_list)
                     } else {
+                        recyclerViewNewsList.visibility = View.VISIBLE
                         textViewMessage.visibility = View.GONE
                         adapter.updateNews(newList = it.newsList)
                     }
@@ -108,21 +98,8 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
 
                 // подгрузка новых новостей
                 is NewsListStates.LoadNewDataState -> {
-                    swipeLoadNews.isRefreshing = false
                     textViewMessage.visibility = View.GONE
-
-                    if (it.isNew) {
-                        Toast.makeText(
-                            activity,
-                            getText(R.string.new_data_uploaded),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        adapter.updateNews(newList = it.newsList)
-                    } else {
-                        Toast.makeText(activity, getText(R.string.no_new_data), Toast.LENGTH_SHORT)
-                            .show()
-                        adapter.updateNews(newList = it.newsList)
-                    }
+                    adapter.updateNews(newList = it.newsList)
                 }
 
                 // сортировка по категориям
@@ -140,7 +117,6 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
                 }
 
                 is NewsListStates.EmptyDBState -> {
-                    swipeLoadNews.isRefreshing = false
                     textViewMessage.visibility = View.VISIBLE
                     textViewMessage.text = getText(R.string.empty_data_from_db)
                 }
@@ -148,8 +124,13 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
         })
 
 
+        // показ прогресса
+        viewModel.showLoading.observe(viewLifecycleOwner, Observer {
+           swipeLoadNews.isRefreshing = it })
+
+
         // swipe для загрузки новых данных
-        swipeLoadNews.setOnRefreshListener {  newsViewModel.separateLoad()  }
+        swipeLoadNews.setOnRefreshListener { viewModel.separateLoad() }
     }
 
 
@@ -172,17 +153,24 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
 
     // переход к фрагменту деталировки и передача выбранной новости
     override fun onClick(view: View, news: NewsModel) {
-        Toast.makeText(activity, "выбранный элемент № ${news.id}", Toast.LENGTH_SHORT).show()
-
-//        val newsBundle: Bundle = bundleOf("selectedNewsItem" to news)
-//        findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
+        val newsBundle: Bundle = bundleOf("newsId" to news.id)
+        findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
     }
 
 
 
     override fun onResume() {
         super.onResume()
-        newsViewModel.loadFromDB()
+
+        if (viewModel.statesList.value == null){
+            viewModel.loadFromDB()
+        }
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.onDestroy()
     }
 
 
@@ -196,7 +184,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
             AlertDialog.Builder(it)
                 .setTitle(R.string.text_category)
                 .setItems(categoryList) { _, which ->
-                    newsViewModel.loadNewsFromCategory(category = categoryList[which])
+                    viewModel.loadNewsFromCategory(category = categoryList[which])
                 }
                 .create()
                 .show()
@@ -210,7 +198,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
             .setTitle(R.string.question_delete_all_from_db)
 
             .setPositiveButton(R.string.answer_yes) { _, _ ->
-                newsViewModel.clearDB()
+                viewModel.clearDB()
                 adapter.clearNewsList()
 
                 // очистить кэш изображений

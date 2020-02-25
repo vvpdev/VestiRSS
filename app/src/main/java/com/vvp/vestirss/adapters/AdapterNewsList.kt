@@ -77,8 +77,6 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
 
             this.textDateNewsCell.text = news.pubDate
 
-
-            // привязка слушателя
             this.textTitleNewsCell.setOnClickListener{  action.onClick(view = itemView, news =  news) }
         }
     }

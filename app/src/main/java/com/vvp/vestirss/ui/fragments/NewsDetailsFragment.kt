@@ -1,16 +1,23 @@
 package com.vvp.vestirss.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
+import com.vvp.vestirss.viewmodels.DetailsNewsViewModel
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_news_details.*
 
 
 class NewsDetailsFragment : Fragment() {
 
+    private lateinit var viewModel: DetailsNewsViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -24,60 +31,40 @@ class NewsDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // привязка viewModel к фрагменту
+        viewModel = ViewModelProvider(this).get(DetailsNewsViewModel::class.java)
+
         activity!!.toolbar.title = getString(R.string.title_news_list_screen)
+
+
+        getNewsData()
+
+
+        viewModel.newsInstance.observe(viewLifecycleOwner, Observer {
+
+            imageNews.visibility = View.VISIBLE
+            Glide
+                .with(this)
+                .load(it.imageUrl)
+                .centerCrop()
+                .placeholder(R.drawable.placeholder)      // если изображение не загружено
+                .into(imageNews)
+
+            textTitleFullNews.text = it.title
+            textFullTextNews.text = it.fullText
+        })
     }
 
 
-    //___________________________
-    //View implementation
+    private fun getNewsData() {
+
+        val newsId: Int? = arguments?.getInt("newsId")
+        newsId?.let { viewModel.getNews(id = it) }
+    }
 
 
-//    override fun getNewsData() {
-//
-//        val selectedNews: NewsModel? = arguments!!.getParcelable("selectedNewsItem")
-//        presenter.takeData(selectedNews!!)
-//    }
-//
-//
-//    override fun showProgress(show: Boolean) {
-//
-//        if (show) {
-//
-//            progressLoadNewsDetails.visibility = View.VISIBLE
-//            textTitleFullNews.visibility = View.GONE
-//            textFullTextNews.visibility = View.GONE
-//            imageNews.visibility = View.GONE
-//        } else {
-//
-//            progressLoadNewsDetails.visibility = View.GONE
-//            textTitleFullNews.visibility = View.VISIBLE
-//            textFullTextNews.visibility = View.VISIBLE
-//            imageNews.visibility = View.VISIBLE
-//        }
-//    }
-//
-//
-//    override fun showDataOnScreen(news: NewsModel) {
-//
-//        textTitleFullNews.text = news.title
-//        textFullTextNews.text = news.fullText
-//
-//        loadImage(news.imageUrl)
-//    }
-//
-//
-//    private fun loadImage(url: String?) {
-//        if (url.isNullOrEmpty()) {
-//            imageNews.visibility = View.GONE
-//        } else {
-//            imageNews.visibility = View.VISIBLE
-//            Glide
-//                .with(this)
-//                .load(url)
-//                .centerCrop()
-//                .placeholder(R.drawable.placeholder)      // если изображение не загружено
-//                .into(imageNews)
-//        }
-//    }
-
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.onDestroy()
+    }
 }

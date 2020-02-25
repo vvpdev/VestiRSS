@@ -4,6 +4,7 @@ import com.vvp.vestirss.di.modules.*
 
 import com.vvp.vestirss.repository.RepositoryClass
 import com.vvp.vestirss.repository.network.retrofit.DataProvider
+import com.vvp.vestirss.viewmodels.DetailsNewsViewModel
 import com.vvp.vestirss.viewmodels.NewsListViewModel
 import dagger.Component
 
@@ -16,8 +17,10 @@ import dagger.Component
 
 interface DIComponent {
 
-    // инжектирование всех переменных
+
     fun injectNewsListViewModel(viewModel: NewsListViewModel)
+
+    fun injectDetailsNewsViewModel(viewModel: DetailsNewsViewModel)
 
     fun injectDataProvider(provider: DataProvider)
 

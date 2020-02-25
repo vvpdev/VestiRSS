@@ -1,16 +1,12 @@
 package com.vvp.vestirss.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.RepositoryClass
 import com.vvp.vestirss.repository.models.NewsModel
 import com.vvp.vestirss.utils.NewsListStates
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 class NewsListViewModel: ViewModel() {
@@ -19,22 +15,30 @@ class NewsListViewModel: ViewModel() {
     @Inject
     lateinit var repository: RepositoryClass
 
-    // индикатор наличия сохраненных новостей в БД
-    val isSavedNews: MutableLiveData<Boolean> = MutableLiveData()
+    // liveData наличия сохраненных новостей в БД
+    var isSavedNews: MutableLiveData<Boolean> = MutableLiveData()
 
-    // хранилище liveData для текущих состояний
-    val newsListState: MutableLiveData<NewsListStates> =  MutableLiveData()
+    // liveData для текущих состояний
+    var statesList: MutableLiveData<NewsListStates> =  MutableLiveData()
+
+    // liveData для прогресса загрузки
+    var showLoading: MutableLiveData<Boolean> =  MutableLiveData()
+
+
+    // для отмены корутин
+    private var job: Job? = null
+
 
     // инжектирование репозитория
     init {
-        App.diComponent!!.injectNewsListViewModel(viewModel = this)
+        App.diComponent?.injectNewsListViewModel(viewModel = this)
     }
 
 
     // загрузка из БД
     fun loadFromDB() {
-        CoroutineScope(Dispatchers.IO).launch {
-            newsListState.postValue( NewsListStates.LoadedFromDBState(newsList = repository.loadFromDB().await()) )
+        job = CoroutineScope(Dispatchers.IO).launch {
+            statesList.postValue(repository.loadFromDB().await().let { NewsListStates.LoadedFromDBState(newsList = it) })
             checkLoadDB()
         }
     }
@@ -43,7 +47,7 @@ class NewsListViewModel: ViewModel() {
     // проверка заполненности БД
     private fun checkLoadDB() {
 
-        CoroutineScope(Dispatchers.IO).launch {
+        job = CoroutineScope(Dispatchers.IO).launch {
             if (repository.sizeNewsInDB() != 0) {
                 isSavedNews.postValue(true)
             } else {
@@ -56,34 +60,29 @@ class NewsListViewModel: ViewModel() {
     // загрузка по свайпу
     fun separateLoad(){
 
-        newsListState.postValue( NewsListStates.LoadingState )
+        job = CoroutineScope(Dispatchers.IO).launch {
 
-        CoroutineScope(Dispatchers.IO).launch {
+           showLoading.postValue(true)
 
             // если в БД нет сохраненных новостей
             if (repository.sizeNewsInDB() == 0) {
-
-                Log.i("VestiRSS_Log", "NewsListViewModel запрос метода loadInitialData()")
-
-                newsListState.postValue( NewsListStates.InitLoadFromNetworkState( newsList =  repository.loadInitialData().await()) )
+                statesList.postValue( NewsListStates.InitLoadFromNetworkState( newsList = repository.loadInitialData().await()) )
+                showLoading.postValue(false)
                 checkLoadDB()
 
             } else {
 
-                Log.i("VestiRSS_Log", "NewsListViewModel запрос метода loadNewData()")
-
                 val freshData: ArrayList<NewsModel> = repository.loadNewData().await()
 
-                if (freshData.isNullOrEmpty()){
+                if (!freshData.isNullOrEmpty()){
 
-                    // если новых данных нет, возвращаем данные из БД
-                    newsListState.postValue(NewsListStates.LoadNewDataState(newsList = repository.loadFromDB().await(), isNew = false) )
+                    // если сеть доступна и есть новые данные
+                    statesList.postValue( NewsListStates.LoadNewDataState(newsList = freshData) )
+                    showLoading.postValue(false)
                 } else {
-
-                    // если есть новые данные
-                    newsListState.postValue( NewsListStates.LoadNewDataState(newsList = freshData, isNew = true) )
-                    checkLoadDB()
+                    showLoading.postValue(false)
                 }
+                freshData.clear()
             }
         }
     }
@@ -91,22 +90,26 @@ class NewsListViewModel: ViewModel() {
 
     // сортировка новостей по категориям
     fun loadNewsFromCategory(category: String){
-            CoroutineScope(Dispatchers.IO).launch {
-
-                newsListState.postValue( NewsListStates.SortState(newsList = repository.selectNewsForCategory(category = category)) )
-            }
+        job = CoroutineScope(Dispatchers.IO).launch {
+            statesList.postValue( NewsListStates.SortState(newsList = repository.selectNewsForCategory(category = category)) ) }
     }
 
 
-    // очистка БД и кеша
+
     fun clearDB() {
 
-        CoroutineScope(Dispatchers.IO).launch {
-            newsListState.postValue(NewsListStates.LoadingState)
+        job = CoroutineScope(Dispatchers.IO).launch {
+            showLoading.postValue(true)
             repository.clearDB()
             delay(500)
             checkLoadDB()
-            newsListState.postValue(NewsListStates.EmptyDBState)
+            showLoading.postValue(false)
+            statesList.postValue(NewsListStates.EmptyDBState)
         }
+    }
+
+
+    fun onDestroy(){
+        job?.cancel()
     }
 }
