@@ -1,7 +1,6 @@
 package com.vvp.vestirss.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -58,8 +57,8 @@ class NewsDetailsFragment : Fragment() {
 
     private fun getNewsData() {
 
-        val newsId: Int? = arguments?.getInt("newsId")
-        newsId?.let { viewModel.getNews(id = it) }
+        val newsTitle: String = arguments?.getString("newsItem") ?: ""
+        viewModel.getNews(title = newsTitle)
     }
 
 

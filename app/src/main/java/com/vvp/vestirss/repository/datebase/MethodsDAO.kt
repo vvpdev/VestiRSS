@@ -22,6 +22,6 @@ interface MethodsDAO {
     @Query("SELECT * FROM NewsModel where category = :category")
     fun getNewsSelectedCategory(category: String): List<NewsModel>
 
-    @Query("SELECT * FROM NewsModel where id = :id")
-    fun getNewsById(id: Int): NewsModel
+    @Query("SELECT * FROM NewsModel where title = :title")
+    fun getNewsByTitle(title: String): NewsModel
 }

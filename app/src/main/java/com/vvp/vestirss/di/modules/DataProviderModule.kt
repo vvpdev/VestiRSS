@@ -1,6 +1,6 @@
 package com.vvp.vestirss.di.modules
 
-import com.vvp.vestirss.repository.network.retrofit.DataProvider
+import com.vvp.vestirss.repository.network.DataProvider
 import dagger.Module
 import dagger.Provides
 
@@ -9,7 +9,7 @@ import dagger.Provides
 class DataProviderModule {
 
     @Provides
-    fun provideDataProvider(): DataProvider{
+    fun provideDataProvider(): DataProvider {
         return DataProvider()
     }
 }

@@ -26,9 +26,9 @@ class DetailsNewsViewModel: ViewModel() {
     val newsInstance: MutableLiveData<NewsModel> =  MutableLiveData()
 
 
-    fun getNews(id: Int){
+    fun getNews(title: String){
         loadJob = CoroutineScope(Dispatchers.IO).launch {
-            newsInstance.postValue(repository.getNewsById(id = id).await())
+            newsInstance.postValue(repository.getNewsByTitle(title = title).await())
         }
     }
 

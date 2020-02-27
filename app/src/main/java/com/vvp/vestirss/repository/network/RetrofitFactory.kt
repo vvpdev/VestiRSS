@@ -1,20 +1,15 @@
-@file:Suppress("DEPRECATION")
-
-package com.vvp.vestirss.repository.network.retrofit
+package com.vvp.vestirss.repository.network
 
 import retrofit2.Retrofit
-import retrofit2.converter.simplexml.SimpleXmlConverterFactory
 
-@Suppress("DEPRECATION")
 class RetrofitFactory {
 
-        private val BASE_URL = "https://www.vesti.ru/"
+        private val BASE_URL = "https://www.vesti.ru"
 
         private fun getRetrofitInstance(): Retrofit{
 
                 return Retrofit.Builder()
                     .baseUrl(BASE_URL)
-                    .addConverterFactory(SimpleXmlConverterFactory.create())
                     .build()
             }
 

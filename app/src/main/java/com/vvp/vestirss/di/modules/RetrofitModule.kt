@@ -1,6 +1,6 @@
 package com.vvp.vestirss.di.modules
 
-import com.vvp.vestirss.repository.network.retrofit.RetrofitFactory
+import com.vvp.vestirss.repository.network.RetrofitFactory
 import dagger.Module
 import dagger.Provides
 
@@ -9,7 +9,7 @@ import dagger.Provides
 class RetrofitModule {
 
     @Provides
-    fun provideRetrofitFactory(): RetrofitFactory{
+    fun provideRetrofitFactory(): RetrofitFactory {
         return RetrofitFactory()
     }
 }

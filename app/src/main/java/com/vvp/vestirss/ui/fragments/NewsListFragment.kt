@@ -151,9 +151,11 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
     }
 
 
+
+
     // переход к фрагменту деталировки и передача выбранной новости
     override fun onClick(view: View, news: NewsModel) {
-        val newsBundle: Bundle = bundleOf("newsId" to news.id)
+        val newsBundle: Bundle = bundleOf("newsItem" to news.title)
         findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
     }
 

@@ -4,7 +4,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.RepositoryClass
-import com.vvp.vestirss.repository.models.NewsModel
 import com.vvp.vestirss.utils.NewsListStates
 import kotlinx.coroutines.*
 import javax.inject.Inject
@@ -72,17 +71,10 @@ class NewsListViewModel: ViewModel() {
 
             } else {
 
-                val freshData: ArrayList<NewsModel> = repository.loadNewData().await()
-
-                if (!freshData.isNullOrEmpty()){
-
-                    // если сеть доступна и есть новые данные
-                    statesList.postValue( NewsListStates.LoadNewDataState(newsList = freshData) )
-                    showLoading.postValue(false)
-                } else {
+                if (repository.loadNewData().await()){
+                    statesList.postValue( NewsListStates.LoadNewDataState(newsList = repository.loadFromDB().await()) )
                     showLoading.postValue(false)
                 }
-                freshData.clear()
             }
         }
     }

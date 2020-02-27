@@ -3,25 +3,22 @@ package com.vvp.vestirss.repository.models
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-    // класс-модель для новости
+// класс-модель для новости
 
 @Entity
 data class NewsModel(
 
-    var title: String,
+    @PrimaryKey
+    var title: String = "",
 
-    var pubDate: String,
+    var pubDate: String? = null,
 
-    var category: String,
+    var category: String? = null,
 
-    var imageUrl: String,
+    var imageUrl: String? = null,
 
-    var fullText: String,
-
-    @PrimaryKey(autoGenerate = true)
-    var id: Int
+    var fullText: String? = null
 )
-
 
 
 

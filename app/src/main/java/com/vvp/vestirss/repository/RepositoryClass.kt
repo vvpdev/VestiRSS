@@ -3,7 +3,7 @@ package com.vvp.vestirss.repository
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.datebase.MethodsDAO
 import com.vvp.vestirss.repository.models.NewsModel
-import com.vvp.vestirss.repository.network.retrofit.DataProvider
+import com.vvp.vestirss.repository.network.DataProvider
 import kotlinx.coroutines.*
 import javax.inject.Inject
 
@@ -61,9 +61,6 @@ class RepositoryClass {
                 initialNewsList.sortBy { it.pubDate }
 
                 methodsDAO.insertNewsList(newsList = initialNewsList)
-
-                initialNewsList.clear()
-                initialNewsList.addAll( methodsDAO.getAllNews() )
             }
             return@async initialNewsList
         }
@@ -71,7 +68,7 @@ class RepositoryClass {
 
 
     // подгрузка новых данных
-    fun loadNewData(): Deferred<ArrayList<NewsModel>> {
+    fun loadNewData(): Deferred<Boolean> {
 
         // промежуточный массив для данных, отобранных как новые
         val freshData: ArrayList<NewsModel> = ArrayList()
@@ -99,14 +96,13 @@ class RepositoryClass {
                     // записываем в БД (сортировка по возрастанию времени)
                     freshData.sortBy { it.pubDate }
                     methodsDAO.insertNewsList(newsList = freshData)
-
-                    freshData.clear()
-                    freshData.addAll(methodsDAO.getAllNews())
+                } else{
+                    return@async false
                 }
             }
             newData.clear()
 
-            return@async freshData
+            return@async true
         }
     }
 
@@ -130,9 +126,9 @@ class RepositoryClass {
 
 
     // получить новость по Id
-    fun getNewsById(id: Int): Deferred<NewsModel>{
+    fun getNewsByTitle(title: String): Deferred<NewsModel>{
         return CoroutineScope(Dispatchers.IO).async {
-            return@async methodsDAO.getNewsById(id = id)
+            return@async methodsDAO.getNewsByTitle(title = title)
         }
     }
 

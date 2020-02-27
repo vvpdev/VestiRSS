@@ -28,11 +28,13 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
     // обновление массива новостей
     fun updateNews(newList: ArrayList<NewsModel>){
 
-        // сортировка по возрастанию времени
-        newList.sortBy { it.pubDate }
+        // сортировка по убыванию времени
+        newList.sortedBy { it.pubDate }
 
         val diffUtil = NewsDiffUtils(oldList = listNews, newsList = newList)
         val diffResult: DiffUtil.DiffResult = DiffUtil.calculateDiff(diffUtil)
+
+        listNews.clear()
 
         newList.forEach {
             listNews.addFirst(it)
