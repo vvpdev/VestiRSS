@@ -1,6 +1,7 @@
 package com.vvp.vestirss.ui.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
 import com.vvp.vestirss.adapters.AdapterNewsList
+import com.vvp.vestirss.repository.models.MinNewsModel
 import com.vvp.vestirss.repository.models.NewsModel
 import com.vvp.vestirss.utils.NewsListStates
 import com.vvp.vestirss.viewmodels.NewsListViewModel
@@ -154,7 +156,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
 
 
     // переход к фрагменту деталировки и передача выбранной новости
-    override fun onClick(view: View, news: NewsModel) {
+    override fun onClick(view: View, news: MinNewsModel) {
         val newsBundle: Bundle = bundleOf("newsItem" to news.title)
         findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
     }
@@ -170,11 +172,10 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
     }
 
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         viewModel.onDestroy()
     }
-
 
 
     // отображение категорий сортировки

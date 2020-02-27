@@ -3,7 +3,7 @@ package com.vvp.vestirss.repository.models
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// класс-модель для новости
+    // класс-модель для новости
 
 @Entity
 data class NewsModel(

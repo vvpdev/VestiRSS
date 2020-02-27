@@ -41,16 +41,19 @@ class NewsDetailsFragment : Fragment() {
 
         viewModel.newsInstance.observe(viewLifecycleOwner, Observer {
 
-            imageNews.visibility = View.VISIBLE
-            Glide
-                .with(this)
-                .load(it.imageUrl)
-                .centerCrop()
-                .placeholder(R.drawable.placeholder)      // если изображение не загружено
-                .into(imageNews)
+            if (it != null){
 
-            textTitleFullNews.text = it.title
-            textFullTextNews.text = it.fullText
+                imageNews.visibility = View.VISIBLE
+                Glide
+                    .with(this)
+                    .load(it.imageUrl)
+                    .centerCrop()
+                    .placeholder(R.drawable.placeholder)      // если изображение не загружено
+                    .into(imageNews)
+
+                textTitleFullNews.text = it.title
+                textFullTextNews.text = it.fullText
+            }
         })
     }
 

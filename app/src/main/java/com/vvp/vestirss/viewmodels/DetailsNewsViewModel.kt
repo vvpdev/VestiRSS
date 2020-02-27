@@ -18,12 +18,13 @@ class DetailsNewsViewModel: ViewModel() {
 
     private var loadJob: Job? = null
 
-    init {
-        App.diComponent?.injectDetailsNewsViewModel(this)
-    }
-
     // liveData для новости
     val newsInstance: MutableLiveData<NewsModel> =  MutableLiveData()
+
+    init {
+        App.diComponent?.injectDetailsNewsViewModel(this)
+
+    }
 
 
     fun getNews(title: String){

@@ -7,10 +7,11 @@ import com.vvp.vestirss.repository.datebase.MethodsDAO
 import com.vvp.vestirss.repository.datebase.NewsDateBase
 import dagger.Module
 import dagger.Provides
+import javax.inject.Singleton
 
 
 @Module
-class NewsDateBaseModule {
+class DateBaseModule {
 
     @Provides
     fun provideContext(): Context {

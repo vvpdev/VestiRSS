@@ -1,11 +1,12 @@
 package com.vvp.vestirss.utils
 
 import androidx.recyclerview.widget.DiffUtil
+import com.vvp.vestirss.repository.models.MinNewsModel
 import com.vvp.vestirss.repository.models.NewsModel
 import java.util.*
 import kotlin.collections.ArrayList
 
-class NewsDiffUtils (private val oldList: LinkedList<NewsModel>, private val newsList: ArrayList<NewsModel>): DiffUtil.Callback() {
+class NewsDiffUtils (private val oldList: LinkedList<MinNewsModel>, private val newsList: ArrayList<MinNewsModel>): DiffUtil.Callback() {
 
 
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {

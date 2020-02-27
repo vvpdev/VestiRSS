@@ -7,48 +7,51 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.vvp.vestirss.R
-import com.vvp.vestirss.repository.models.NewsModel
+import com.vvp.vestirss.repository.models.MinNewsModel
 import com.vvp.vestirss.utils.NewsDiffUtils
 import java.util.*
-import kotlin.collections.ArrayList
 
 class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapter<AdapterNewsList.ViewHolder>() {
 
 
     // listener
     interface onClickListener{
-        fun onClick(view: View, news: NewsModel)
+        fun onClick(view: View, news: MinNewsModel)
     }
 
 
     // внутренний массив для данных
-    private var listNews: LinkedList<NewsModel> = LinkedList()
+    private var currentNewsList: LinkedList<MinNewsModel> = LinkedList()
 
 
     // обновление массива новостей
-    fun updateNews(newList: ArrayList<NewsModel>){
+    fun updateNews(newList: ArrayList<MinNewsModel>){
 
-        // сортировка по убыванию времени
-        newList.sortedBy { it.pubDate }
+        // если текущий массив не равен новому
+        if (currentNewsList != newList){
 
-        val diffUtil = NewsDiffUtils(oldList = listNews, newsList = newList)
-        val diffResult: DiffUtil.DiffResult = DiffUtil.calculateDiff(diffUtil)
+            // сортировка по убыванию времени
+            newList.sortedBy { it.pubDate }
 
-        listNews.clear()
+            val diffUtil = NewsDiffUtils(oldList = currentNewsList, newsList = newList)
+            val diffResult: DiffUtil.DiffResult = DiffUtil.calculateDiff(diffUtil)
 
-        newList.forEach {
-            listNews.addFirst(it)
+            currentNewsList.clear()
+
+            newList.forEach {
+                currentNewsList.addFirst(it)
+            }
+
+            diffResult.dispatchUpdatesTo(this)
         }
-
-        diffResult.dispatchUpdatesTo(this)
     }
+
 
     // очистка списка
     fun clearNewsList(){
-        listNews.clear()
+        currentNewsList.clear()
         notifyDataSetChanged()
     }
-
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -57,12 +60,12 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
     }
 
     override fun getItemCount(): Int {
-        return listNews.count()
+        return currentNewsList.count()
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        holder.bindElements(news = this.listNews[position], action = listener)
+        holder.bindElements(news = this.currentNewsList[position], action = listener)
     }
 
     class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){
@@ -73,7 +76,7 @@ class AdapterNewsList(private val listener: onClickListener): RecyclerView.Adapt
         // время
         private var textDateNewsCell: TextView = itemView.findViewById(R.id.textDateNewsCell)
 
-        fun bindElements(news: NewsModel, action: onClickListener){
+        fun bindElements(news: MinNewsModel, action: onClickListener){
 
             this.textTitleNewsCell.text = news.title
 

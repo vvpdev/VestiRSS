@@ -2,6 +2,7 @@ package com.vvp.vestirss.repository
 
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.datebase.MethodsDAO
+import com.vvp.vestirss.repository.models.MinNewsModel
 import com.vvp.vestirss.repository.models.NewsModel
 import com.vvp.vestirss.repository.network.DataProvider
 import kotlinx.coroutines.*
@@ -23,17 +24,17 @@ class RepositoryClass {
 
 
     fun sizeNewsInDB(): Int{
-        return methodsDAO.getAllNews().size
+        return methodsDAO.getAllMinNews().size
     }
 
 
     // загрузка из БД
-    fun loadFromDB(): Deferred<ArrayList<NewsModel>> {
+    fun loadFromDB(): Deferred<ArrayList<MinNewsModel>> {
 
         return CoroutineScope(Dispatchers.IO).async {
 
-            val loadFromDB: ArrayList<NewsModel> = ArrayList()
-            loadFromDB. addAll( methodsDAO.getAllNews() )
+            val loadFromDB: ArrayList<MinNewsModel> = ArrayList()
+            loadFromDB. addAll( methodsDAO.getAllMinNews() )
             return@async loadFromDB
         }
     }
@@ -48,11 +49,12 @@ class RepositoryClass {
 
 
     // начальное получение данных из сети и запись в БД
-     fun loadInitialData(): Deferred<ArrayList<NewsModel>> {
+     fun loadInitialData(): Deferred<ArrayList<MinNewsModel>> {
 
         return CoroutineScope(Dispatchers.IO).async {
 
             val initialNewsList: ArrayList<NewsModel> = ArrayList()
+            val initialMinNewsList: ArrayList<MinNewsModel> = ArrayList()
             initialNewsList.addAll( provider.getNewsList().await()  )
 
             if (!initialNewsList.isNullOrEmpty()) {
@@ -61,8 +63,10 @@ class RepositoryClass {
                 initialNewsList.sortBy { it.pubDate }
 
                 methodsDAO.insertNewsList(newsList = initialNewsList)
+
+                initialMinNewsList.addAll(methodsDAO.getAllMinNews())
             }
-            return@async initialNewsList
+            return@async initialMinNewsList
         }
     }
 
@@ -75,7 +79,7 @@ class RepositoryClass {
 
         return CoroutineScope(Dispatchers.IO).async {
 
-            val lastTitle = methodsDAO.getAllNews().last().title
+            val lastTitle = methodsDAO.getAllMinNews().last().title
 
             val newData = provider.getNewsList().await()
 
@@ -108,17 +112,17 @@ class RepositoryClass {
 
 
     // выбор новостей по категориям
-    fun selectNewsForCategory(category: String): ArrayList<NewsModel>{
+    fun selectNewsForCategory(category: String): ArrayList<MinNewsModel>{
 
         // массив для отобранных по категории новостей
-        val sortList: ArrayList<NewsModel> = ArrayList()
+        val sortList: ArrayList<MinNewsModel> = ArrayList()
 
         CoroutineScope(Dispatchers.IO).launch {
 
             if (category != "Все"){
-                sortList.addAll( methodsDAO.getNewsSelectedCategory(category = category) )
+                sortList.addAll( methodsDAO.getAllMinNews(category = category) )
             } else {
-                sortList.addAll( methodsDAO.getAllNews())
+                sortList.addAll( methodsDAO.getAllMinNews())
             }
         }
         return sortList

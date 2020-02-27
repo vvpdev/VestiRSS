@@ -10,7 +10,7 @@ import dagger.Component
 
 
 @Component(modules = [DataProviderModule::class,
-                      NewsDateBaseModule::class,
+                      DateBaseModule::class,
                       RetrofitModule::class,
                       RepositoryModule::class])
 

@@ -74,6 +74,8 @@ class NewsListViewModel: ViewModel() {
                 if (repository.loadNewData().await()){
                     statesList.postValue( NewsListStates.LoadNewDataState(newsList = repository.loadFromDB().await()) )
                     showLoading.postValue(false)
+                } else{
+                    showLoading.postValue(false)
                 }
             }
         }
