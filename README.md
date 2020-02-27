@@ -10,7 +10,7 @@
 
 minSdk - 23 (Android 6)
 
-Android Navigation component, Retrofit (+ Simple XML Converter), Kotlin Coroutines, MVVM, Glide, Room, Dagger2
+Android Navigation component, Retrofit, Kotlin Coroutines, MVVM, Glide, Room, Dagger2
 
 
 ![Screenshot](VestiRss2.gif)
