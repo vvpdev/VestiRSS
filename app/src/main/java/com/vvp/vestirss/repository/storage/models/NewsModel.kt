@@ -1,4 +1,4 @@
-package com.vvp.vestirss.repository.models
+package com.vvp.vestirss.repository.storage.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

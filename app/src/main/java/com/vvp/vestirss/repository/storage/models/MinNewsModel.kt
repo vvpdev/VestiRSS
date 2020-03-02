@@ -1,4 +1,4 @@
-package com.vvp.vestirss.repository.models
+package com.vvp.vestirss.repository.storage.models
 
     //data class без дополнительных полей, которые не нужны для отображения в recyclerView
 

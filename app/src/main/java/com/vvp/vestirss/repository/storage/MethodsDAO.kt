@@ -1,11 +1,11 @@
-package com.vvp.vestirss.repository.datebase
+package com.vvp.vestirss.repository.storage
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.vvp.vestirss.repository.models.MinNewsModel
-import com.vvp.vestirss.repository.models.NewsModel
+import com.vvp.vestirss.repository.storage.models.MinNewsModel
+import com.vvp.vestirss.repository.storage.models.NewsModel
 
 
 @Dao

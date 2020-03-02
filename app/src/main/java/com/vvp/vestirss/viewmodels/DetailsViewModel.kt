@@ -4,14 +4,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.RepositoryClass
-import com.vvp.vestirss.repository.models.NewsModel
+import com.vvp.vestirss.repository.storage.models.NewsModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class DetailsNewsViewModel: ViewModel() {
+class DetailsViewModel: ViewModel() {
 
     @Inject
     lateinit var repository: RepositoryClass
@@ -29,7 +29,7 @@ class DetailsNewsViewModel: ViewModel() {
 
     fun getNews(title: String){
         loadJob = CoroutineScope(Dispatchers.IO).launch {
-            newsInstance.postValue(repository.getNewsByTitle(title = title).await())
+            newsInstance.postValue(repository.getNewsByTitle(title = title))
         }
     }
 

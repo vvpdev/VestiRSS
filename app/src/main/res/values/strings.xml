@@ -34,5 +34,7 @@
     <string name="answer_yes">да</string>
     <string name="answer_no">нет</string>
     <string name="data_deleted_successfully">данные успешно удалены</string>
+    <string name="back_text_button">назад</string>
+    <string name="next_text_button">вперед</string>
 
 </resources>

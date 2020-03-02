@@ -1,6 +1,6 @@
 package com.vvp.vestirss.di.modules
 
-import com.vvp.vestirss.repository.network.DataProvider
+import com.vvp.vestirss.repository.remote.DataProvider
 import dagger.Module
 import dagger.Provides
 

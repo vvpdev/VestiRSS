@@ -1,9 +1,9 @@
-package com.vvp.vestirss.repository.network
+package com.vvp.vestirss.repository.remote
 
 import android.util.Log
 import android.util.Xml
 import com.vvp.vestirss.App
-import com.vvp.vestirss.repository.models.NewsModel
+import com.vvp.vestirss.repository.storage.models.NewsModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +23,7 @@ class DataProvider {
 
 
     // загрузка новостей
-    suspend fun getNewsList(): Deferred<ArrayList<NewsModel>>{
+    suspend fun getNewsList(): ArrayList<NewsModel> {
 
         return CoroutineScope(Dispatchers.IO).async {
 
@@ -32,7 +32,7 @@ class DataProvider {
 
             try {
 
-               val inputStream: InputStream = retrofitFactory.getRssService().getRssData().byteStream()
+                val inputStream: InputStream = retrofitFactory.getRssService().getRssData().byteStream()
 
                 val parser: XmlPullParser = Xml.newPullParser()
 
@@ -86,14 +86,12 @@ class DataProvider {
                     val newData = it.pubDate!!.removeRange(indexPlus .. lastIndex)
                     it.pubDate = newData
                 }
-            }
-
-            catch (e: Exception){
+            } catch (e: Exception){
                 Log.i("VestiRSS_Log", "network is not available")
             }
 
             return@async newsList
-        }
+        }.await()
     }
 
 

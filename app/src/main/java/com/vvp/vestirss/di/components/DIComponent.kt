@@ -3,10 +3,11 @@ package com.vvp.vestirss.di.components
 import com.vvp.vestirss.di.modules.*
 
 import com.vvp.vestirss.repository.RepositoryClass
-import com.vvp.vestirss.repository.network.DataProvider
-import com.vvp.vestirss.viewmodels.DetailsNewsViewModel
-import com.vvp.vestirss.viewmodels.NewsListViewModel
+import com.vvp.vestirss.repository.remote.DataProvider
+import com.vvp.vestirss.viewmodels.DetailsViewModel
+import com.vvp.vestirss.viewmodels.ListViewModel
 import dagger.Component
+import javax.inject.Singleton
 
 
 @Component(modules = [DataProviderModule::class,
@@ -14,12 +15,13 @@ import dagger.Component
                       RetrofitModule::class,
                       RepositoryModule::class])
 
+@Singleton
 interface DIComponent {
 
 
-    fun injectNewsListViewModel(viewModel: NewsListViewModel)
+    fun injectNewsListViewModel(viewModel: ListViewModel)
 
-    fun injectDetailsNewsViewModel(viewModel: DetailsNewsViewModel)
+    fun injectDetailsNewsViewModel(viewModel: DetailsViewModel)
 
     fun injectDataProvider(provider: DataProvider)
 

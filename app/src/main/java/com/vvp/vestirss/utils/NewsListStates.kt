@@ -1,6 +1,6 @@
 package com.vvp.vestirss.utils
 
-import com.vvp.vestirss.repository.models.MinNewsModel
+import com.vvp.vestirss.repository.storage.models.MinNewsModel
 
 sealed class NewsListStates {
 

@@ -1,10 +1,10 @@
 package com.vvp.vestirss.repository
 
 import com.vvp.vestirss.App
-import com.vvp.vestirss.repository.datebase.MethodsDAO
-import com.vvp.vestirss.repository.models.MinNewsModel
-import com.vvp.vestirss.repository.models.NewsModel
-import com.vvp.vestirss.repository.network.DataProvider
+import com.vvp.vestirss.repository.storage.MethodsDAO
+import com.vvp.vestirss.repository.storage.models.MinNewsModel
+import com.vvp.vestirss.repository.storage.models.NewsModel
+import com.vvp.vestirss.repository.remote.DataProvider
 import kotlinx.coroutines.*
 import javax.inject.Inject
 
@@ -29,14 +29,14 @@ class RepositoryClass {
 
 
     // загрузка из БД
-    fun loadFromDB(): Deferred<ArrayList<MinNewsModel>> {
+    suspend fun loadFromDB(): ArrayList<MinNewsModel> {
 
         return CoroutineScope(Dispatchers.IO).async {
 
             val loadFromDB: ArrayList<MinNewsModel> = ArrayList()
             loadFromDB. addAll( methodsDAO.getAllMinNews() )
             return@async loadFromDB
-        }
+        }.await()
     }
 
 
@@ -49,13 +49,13 @@ class RepositoryClass {
 
 
     // начальное получение данных из сети и запись в БД
-     fun loadInitialData(): Deferred<ArrayList<MinNewsModel>> {
+    suspend fun loadInitialData(): ArrayList<MinNewsModel> {
 
         return CoroutineScope(Dispatchers.IO).async {
 
             val initialNewsList: ArrayList<NewsModel> = ArrayList()
             val initialMinNewsList: ArrayList<MinNewsModel> = ArrayList()
-            initialNewsList.addAll( provider.getNewsList().await()  )
+            initialNewsList.addAll( provider.getNewsList()  )
 
             if (!initialNewsList.isNullOrEmpty()) {
 
@@ -67,12 +67,12 @@ class RepositoryClass {
                 initialMinNewsList.addAll(methodsDAO.getAllMinNews())
             }
             return@async initialMinNewsList
-        }
+        }.await()
     }
 
 
     // подгрузка новых данных
-    fun loadNewData(): Deferred<Boolean> {
+    suspend fun loadNewData(): Boolean {
 
         // промежуточный массив для данных, отобранных как новые
         val freshData: ArrayList<NewsModel> = ArrayList()
@@ -81,7 +81,7 @@ class RepositoryClass {
 
             val lastTitle = methodsDAO.getAllMinNews().last().title
 
-            val newData = provider.getNewsList().await()
+            val newData = provider.getNewsList()
 
             if (!newData.isNullOrEmpty()){
 
@@ -107,7 +107,7 @@ class RepositoryClass {
             newData.clear()
 
             return@async true
-        }
+        }.await()
     }
 
 
@@ -130,10 +130,10 @@ class RepositoryClass {
 
 
     // получить новость по Id
-    fun getNewsByTitle(title: String): Deferred<NewsModel>{
+    suspend fun getNewsByTitle(title: String): NewsModel {
         return CoroutineScope(Dispatchers.IO).async {
             return@async methodsDAO.getNewsByTitle(title = title)
-        }
+        }.await()
     }
 
 }

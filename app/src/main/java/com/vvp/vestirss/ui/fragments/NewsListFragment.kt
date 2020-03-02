@@ -1,7 +1,6 @@
 package com.vvp.vestirss.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
@@ -13,20 +12,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
 import com.vvp.vestirss.adapters.AdapterNewsList
-import com.vvp.vestirss.repository.models.MinNewsModel
-import com.vvp.vestirss.repository.models.NewsModel
+import com.vvp.vestirss.repository.storage.models.MinNewsModel
 import com.vvp.vestirss.utils.NewsListStates
-import com.vvp.vestirss.viewmodels.NewsListViewModel
+import com.vvp.vestirss.viewmodels.ListViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_news_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
+class NewsListFragment : Fragment(), AdapterNewsList.ItemClick {
 
     // viewModel для экрана списка новостей
-    private lateinit var viewModel: NewsListViewModel
+    private lateinit var viewModel: ListViewModel
 
     // for recyclerView
     private lateinit var manager: LinearLayoutManager
@@ -47,7 +45,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.onClickListener {
         activity!!.toolbar.title = getString(R.string.title_news_list_screen)
 
         // привязка viewModel к фрагменту
-        viewModel = ViewModelProvider(this).get(NewsListViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(ListViewModel::class.java)
 
 
         //setup recyclerView

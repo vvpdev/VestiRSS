@@ -9,14 +9,14 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
-import com.vvp.vestirss.viewmodels.DetailsNewsViewModel
+import com.vvp.vestirss.viewmodels.DetailsViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_news_details.*
 
 
 class NewsDetailsFragment : Fragment() {
 
-    private lateinit var viewModel: DetailsNewsViewModel
+    private lateinit var viewModel: DetailsViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -31,7 +31,7 @@ class NewsDetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // привязка viewModel к фрагменту
-        viewModel = ViewModelProvider(this).get(DetailsNewsViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(DetailsViewModel::class.java)
 
         activity!!.toolbar.title = getString(R.string.title_news_list_screen)
 

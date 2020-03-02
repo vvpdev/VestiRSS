@@ -1,6 +1,6 @@
 package com.vvp.vestirss.di.modules
 
-import com.vvp.vestirss.repository.network.RetrofitFactory
+import com.vvp.vestirss.repository.remote.RetrofitFactory
 import dagger.Module
 import dagger.Provides
 

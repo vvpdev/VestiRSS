@@ -8,7 +8,7 @@ import com.vvp.vestirss.utils.NewsListStates
 import kotlinx.coroutines.*
 import javax.inject.Inject
 
-class NewsListViewModel: ViewModel() {
+class ListViewModel: ViewModel() {
 
 
     @Inject
@@ -37,7 +37,7 @@ class NewsListViewModel: ViewModel() {
     // загрузка из БД
     fun loadFromDB() {
         job = CoroutineScope(Dispatchers.IO).launch {
-            statesList.postValue(repository.loadFromDB().await().let { NewsListStates.LoadedFromDBState(newsList = it) })
+            statesList.postValue(repository.loadFromDB().let { NewsListStates.LoadedFromDBState(newsList = it) })
             checkLoadDB()
         }
     }
@@ -65,14 +65,14 @@ class NewsListViewModel: ViewModel() {
 
             // если в БД нет сохраненных новостей
             if (repository.sizeNewsInDB() == 0) {
-                statesList.postValue( NewsListStates.InitLoadFromNetworkState( newsList = repository.loadInitialData().await()) )
+                statesList.postValue( NewsListStates.InitLoadFromNetworkState( newsList = repository.loadInitialData()) )
                 showLoading.postValue(false)
                 checkLoadDB()
 
             } else {
 
-                if (repository.loadNewData().await()){
-                    statesList.postValue( NewsListStates.LoadNewDataState(newsList = repository.loadFromDB().await()) )
+                if (repository.loadNewData()){
+                    statesList.postValue( NewsListStates.LoadNewDataState(newsList = repository.loadFromDB()) )
                     showLoading.postValue(false)
                 } else{
                     showLoading.postValue(false)

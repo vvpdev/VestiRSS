@@ -1,4 +1,4 @@
-package com.vvp.vestirss.repository.network
+package com.vvp.vestirss.repository.remote
 
 import retrofit2.Retrofit
 
