@@ -27,9 +27,9 @@ class DetailsViewModel: ViewModel() {
     }
 
 
-    fun getNews(title: String){
+    fun getNews(id: Int){
         loadJob = CoroutineScope(Dispatchers.IO).launch {
-            newsInstance.postValue(repository.getNewsByTitle(title = title))
+            newsInstance.postValue(repository.getNewsById(id = id))
         }
     }
 

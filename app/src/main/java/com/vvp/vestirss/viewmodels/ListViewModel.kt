@@ -1,10 +1,11 @@
 package com.vvp.vestirss.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.RepositoryClass
-import com.vvp.vestirss.utils.NewsListStates
+import com.vvp.vestirss.repository.storage.models.MinNewsModel
 import kotlinx.coroutines.*
 import javax.inject.Inject
 
@@ -18,14 +19,22 @@ class ListViewModel: ViewModel() {
     var isSavedNews: MutableLiveData<Boolean> = MutableLiveData()
 
     // liveData для текущих состояний
-    var statesList: MutableLiveData<NewsListStates> =  MutableLiveData()
+    var newsList: MutableLiveData<ArrayList<MinNewsModel>> =  MutableLiveData()
 
     // liveData для прогресса загрузки
     var showLoading: MutableLiveData<Boolean> =  MutableLiveData()
 
 
     // для отмены корутин
-    private var job: Job? = null
+    private var loadFromDBJob: Job? = null
+    private var checkLoadDBJob: Job? = null
+    private var separateLoadJob: Job? = null
+    private var sortJob: Job? = null
+    private var clearJob: Job? = null
+    private var loadPageJob: Job? = null
+
+
+
 
 
     // инжектирование репозитория
@@ -36,17 +45,21 @@ class ListViewModel: ViewModel() {
 
     // загрузка из БД
     fun loadFromDB() {
-        job = CoroutineScope(Dispatchers.IO).launch {
-            statesList.postValue(repository.loadFromDB().let { NewsListStates.LoadedFromDBState(newsList = it) })
+        loadFromDBJob = CoroutineScope(Dispatchers.IO).launch {
+
+            showLoading.postValue(true)
+            newsList.postValue( repository.loadFromDB() )
             checkLoadDB()
+            showLoading.postValue(false)
         }
     }
+
 
 
     // проверка заполненности БД
     private fun checkLoadDB() {
 
-        job = CoroutineScope(Dispatchers.IO).launch {
+        checkLoadDBJob = CoroutineScope(Dispatchers.IO).launch {
             if (repository.sizeNewsInDB() != 0) {
                 isSavedNews.postValue(true)
             } else {
@@ -59,20 +72,20 @@ class ListViewModel: ViewModel() {
     // загрузка по свайпу
     fun separateLoad(){
 
-        job = CoroutineScope(Dispatchers.IO).launch {
+        separateLoadJob = CoroutineScope(Dispatchers.IO).launch {
 
            showLoading.postValue(true)
 
             // если в БД нет сохраненных новостей
             if (repository.sizeNewsInDB() == 0) {
-                statesList.postValue( NewsListStates.InitLoadFromNetworkState( newsList = repository.loadInitialData()) )
+                newsList.postValue( repository.loadInitialData() )
                 showLoading.postValue(false)
                 checkLoadDB()
 
             } else {
 
                 if (repository.loadNewData()){
-                    statesList.postValue( NewsListStates.LoadNewDataState(newsList = repository.loadFromDB()) )
+                    newsList.postValue( repository.loadFromDB() )
                     showLoading.postValue(false)
                 } else{
                     showLoading.postValue(false)
@@ -84,26 +97,71 @@ class ListViewModel: ViewModel() {
 
     // сортировка новостей по категориям
     fun loadNewsFromCategory(category: String){
-        job = CoroutineScope(Dispatchers.IO).launch {
-            statesList.postValue( NewsListStates.SortState(newsList = repository.selectNewsForCategory(category = category)) ) }
+        sortJob = CoroutineScope(Dispatchers.IO).launch {
+            newsList.postValue( repository.selectNewsForCategory(category = category)) }
     }
 
 
 
     fun clearDB() {
 
-        job = CoroutineScope(Dispatchers.IO).launch {
+        clearJob = CoroutineScope(Dispatchers.IO).launch {
             showLoading.postValue(true)
             repository.clearDB()
             delay(500)
             checkLoadDB()
             showLoading.postValue(false)
-            statesList.postValue(NewsListStates.EmptyDBState)
+            newsList.postValue(null)
         }
     }
 
 
+
+
+
+    fun loadNextPage(){
+
+        val index: Int? = newsList.value?.last()?.id
+
+        loadPageJob = CoroutineScope(Dispatchers.IO).launch {
+
+            val pagesList = index?.let { repository.loadPage(nextPage = true, index = it) }
+
+            if (!pagesList.isNullOrEmpty()){
+                newsList.postValue( pagesList )
+            }
+            else{
+                Log.i("VestiRssLog", "loadNextPage  пустой массив")
+            }
+        }
+    }
+
+
+    fun loadBackPage(){
+
+        val index: Int? = newsList.value?.first()?.id
+
+        loadPageJob = CoroutineScope(Dispatchers.IO).launch {
+
+            val pagesList = index?.let { repository.loadPage(nextPage = false, index = it) }
+
+            if (!pagesList.isNullOrEmpty()){
+                newsList.postValue(pagesList)
+            } else {
+                Log.i("VestiRssLog", "loadBackPage  пустой массив")
+            }
+        }
+    }
+
+
+
     fun onDestroy(){
-        job?.cancel()
+
+        loadFromDBJob?.cancel()
+        checkLoadDBJob?.cancel()
+        separateLoadJob?.cancel()
+        sortJob?.cancel()
+        clearJob?.cancel()
+        loadPageJob?.cancel()
     }
 }

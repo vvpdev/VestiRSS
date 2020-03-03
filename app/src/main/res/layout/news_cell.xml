@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
+        android:text="textTitleNewsCell"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
     <TextView
@@ -20,5 +21,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_margin="8dp"
+        android:text="textDateNewsCell"
         android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 </LinearLayout>

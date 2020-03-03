@@ -8,8 +8,10 @@ import androidx.room.PrimaryKey
 @Entity
 data class NewsModel(
 
-    @PrimaryKey
-    var title: String = "",
+    @PrimaryKey (autoGenerate = true)
+    var id: Int = 0,
+
+    var title: String? = null,
 
     var pubDate: String? = null,
 

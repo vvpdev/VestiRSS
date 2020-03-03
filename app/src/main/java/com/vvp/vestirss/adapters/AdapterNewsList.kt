@@ -12,14 +12,21 @@ import com.vvp.vestirss.repository.storage.models.MinNewsModel
 import com.vvp.vestirss.utils.NewsDiffUtils
 import java.util.*
 
-class AdapterNewsList(private val listener: ItemClick): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class AdapterNewsList(private val listener: ItemClick, private val buttonsListener: ButtonClick): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
 
-
-    // listener
+    // listener for news items
     interface ItemClick{
         fun onClick(view: View, news: MinNewsModel)
     }
+
+
+    //listener for buttons
+    interface ButtonClick{
+        fun onNextCLick()
+        fun onBackCLick()
+    }
+
 
 
     // внутренний массив для данных
@@ -85,7 +92,7 @@ class AdapterNewsList(private val listener: ItemClick): RecyclerView.Adapter<Rec
 
                 R.layout.news_cell -> (holder as NewsViewHolder).bindElements(news = currentNewsList[position], action = listener)
 
-                R.layout.next_back_buttons ->  ( holder as ButtonsViewHolder).bindButtons()
+                R.layout.next_back_buttons ->  ( holder as ButtonsViewHolder).bindButtons(click = buttonsListener)
         }
     }
 
@@ -118,8 +125,10 @@ class AdapterNewsList(private val listener: ItemClick): RecyclerView.Adapter<Rec
         private val nextButtons: Button = itemView.findViewById(R.id.next_button)
 
         // функция для кнопок
-        fun bindButtons(){
+        fun bindButtons(click: ButtonClick){
 
+            backButtons.setOnClickListener { click.onBackCLick() }
+            nextButtons.setOnClickListener { click.onNextCLick() }
         }
     }
 

@@ -4,7 +4,9 @@ package com.vvp.vestirss.repository.storage.models
 
 data class MinNewsModel (
 
-    var title: String = "",
+    var id: Int? = null,
+
+    var title: String? = null,
 
     var pubDate: String? = null,
 

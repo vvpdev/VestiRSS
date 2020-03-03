@@ -60,8 +60,8 @@ class NewsDetailsFragment : Fragment() {
 
     private fun getNewsData() {
 
-        val newsTitle: String = arguments?.getString("newsItem") ?: ""
-        viewModel.getNews(title = newsTitle)
+        val newsId: Int = arguments?.getInt("newsId") ?: 0
+        viewModel.getNews(id = newsId)
     }
 
 
