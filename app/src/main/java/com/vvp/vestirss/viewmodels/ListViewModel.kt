@@ -4,8 +4,11 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.vvp.vestirss.App
+import com.vvp.vestirss.R
 import com.vvp.vestirss.repository.RepositoryClass
 import com.vvp.vestirss.repository.storage.models.MinNewsModel
+import com.vvp.vestirss.utils.NewsListClass
+import com.vvp.vestirss.utils.SingleLiveEvent
 import kotlinx.coroutines.*
 import javax.inject.Inject
 
@@ -15,14 +18,16 @@ class ListViewModel: ViewModel() {
     @Inject
     lateinit var repository: RepositoryClass
 
-    // liveData наличия сохраненных новостей в БД
+    // boolean наличия сохраненных новостей в БД
     var isSavedNews: MutableLiveData<Boolean> = MutableLiveData()
 
-    // liveData для текущих состояний
-    var newsList: MutableLiveData<ArrayList<MinNewsModel>> =  MutableLiveData()
+    // текущие новости, отображаемые на экране
+    var newsList: MutableLiveData<NewsListClass> =  MutableLiveData()
 
-    // liveData для прогресса загрузки
+    // boolean для показа toast
     var showLoading: MutableLiveData<Boolean> =  MutableLiveData()
+
+    var messageStorage = SingleLiveEvent<Int>()
 
 
     // для отмены корутин
@@ -34,22 +39,26 @@ class ListViewModel: ViewModel() {
     private var loadPageJob: Job? = null
 
 
-
-
-
     // инжектирование репозитория
     init {
         App.diComponent?.injectNewsListViewModel(viewModel = this)
+
+        loadFromDB()
     }
 
 
     // загрузка из БД
-    fun loadFromDB() {
+    private fun loadFromDB() {
+
+        checkLoadDB()
+
+        Log.i("VestiRSS_Log", "ListViewModel - loadFromDB()")
+
+        showLoading.postValue(true)
+
         loadFromDBJob = CoroutineScope(Dispatchers.IO).launch {
 
-            showLoading.postValue(true)
-            newsList.postValue( repository.loadFromDB() )
-            checkLoadDB()
+            newsList.postValue(repository.loadFromDB() as NewsListClass?)
             showLoading.postValue(false)
         }
     }
@@ -59,11 +68,17 @@ class ListViewModel: ViewModel() {
     // проверка заполненности БД
     private fun checkLoadDB() {
 
-        checkLoadDBJob = CoroutineScope(Dispatchers.IO).launch {
-            if (repository.sizeNewsInDB() != 0) {
-                isSavedNews.postValue(true)
+        Log.i("VestiRSS_Log", "ListViewModel checkLoadDB()")
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            // запрос количества новостей в БД
+            val quantity = repository.getSavedNewsQuantity()
+
+            if (quantity != 0) {
+                isSavedNews.postValue(true)         // есть сохраненные новости
             } else {
-                isSavedNews.postValue(false)
+                isSavedNews.postValue(false)        // нет сохраненных новостей
             }
         }
     }
@@ -72,35 +87,42 @@ class ListViewModel: ViewModel() {
     // загрузка по свайпу
     fun separateLoad(){
 
+        checkLoadDB()
+
         separateLoadJob = CoroutineScope(Dispatchers.IO).launch {
 
            showLoading.postValue(true)
 
             // если в БД нет сохраненных новостей
-            if (repository.sizeNewsInDB() == 0) {
-                newsList.postValue( repository.loadInitialData() )
+            if (isSavedNews.value == false) {
+
+                if (repository.loadInitialData()){
+                    newsList.postValue(repository.loadFromDB() as NewsListClass?)
+                }
                 showLoading.postValue(false)
                 checkLoadDB()
 
             } else {
 
-                if (repository.loadNewData()){
-                    newsList.postValue( repository.loadFromDB() )
+                if (repository.loadNewData()){                      // if return true
+                    newsList.postValue(repository.loadFromDB() as NewsListClass?)    // возвращаем 10 свежих новостей
                     showLoading.postValue(false)
+                    messageStorage.postValue(R.string.new_data_uploaded)
                 } else{
                     showLoading.postValue(false)
+                    messageStorage.postValue(R.string.no_new_data)
                 }
             }
         }
     }
 
 
-    // сортировка новостей по категориям
-    fun loadNewsFromCategory(category: String){
-        sortJob = CoroutineScope(Dispatchers.IO).launch {
-            newsList.postValue( repository.selectNewsForCategory(category = category)) }
-    }
 
+    // сортировка новостей по категориям
+//    fun loadNewsFromCategory(category: String){
+//        sortJob = CoroutineScope(Dispatchers.IO).launch {
+//            newsList.postValue( repository.selectNewsForCategory(category = category)) }
+//    }
 
 
     fun clearDB() {
@@ -108,10 +130,11 @@ class ListViewModel: ViewModel() {
         clearJob = CoroutineScope(Dispatchers.IO).launch {
             showLoading.postValue(true)
             repository.clearDB()
-            delay(500)
+            delay(1000)
             checkLoadDB()
             showLoading.postValue(false)
             newsList.postValue(null)
+            messageStorage.postValue(R.string.data_deleted_successfully)
         }
     }
 
@@ -119,36 +142,41 @@ class ListViewModel: ViewModel() {
 
 
 
-    fun loadNextPage(){
+    fun loadNextPage(currentIndex: Int, lastIndex: Int){
 
-        val index: Int? = newsList.value?.last()?.id
+        val index: Int? = newsList.value?.newsList?.first()?.id
+
+        Log.i("VestiRSS_Log", "ListViewModel loadNextPage()  переданный индекс = $index")
 
         loadPageJob = CoroutineScope(Dispatchers.IO).launch {
 
             val pagesList = index?.let { repository.loadPage(nextPage = true, index = it) }
 
             if (!pagesList.isNullOrEmpty()){
-                newsList.postValue( pagesList )
+                newsList.postValue(NewsListClass(newsList = pagesList, currentNumber = (currentIndex + 1), lastNumber = lastIndex))
             }
             else{
-                Log.i("VestiRssLog", "loadNextPage  пустой массив")
+                messageStorage.postValue(R.string.it_last_page)
             }
         }
     }
 
 
-    fun loadBackPage(){
+    fun loadBackPage(currentIndex: Int, lastIndex: Int){
 
-        val index: Int? = newsList.value?.first()?.id
+        val index: Int? = newsList.value?.newsList?.last()?.id
+
+        Log.i("VestiRSS_Log", "ListViewModel loadNextPage()  переданный индекс = $index")
 
         loadPageJob = CoroutineScope(Dispatchers.IO).launch {
 
             val pagesList = index?.let { repository.loadPage(nextPage = false, index = it) }
 
             if (!pagesList.isNullOrEmpty()){
-                newsList.postValue(pagesList)
-            } else {
-                Log.i("VestiRssLog", "loadBackPage  пустой массив")
+                newsList.postValue( NewsListClass(newsList = pagesList, currentNumber = (currentIndex - 1), lastNumber = lastIndex) )
+            }
+            else{
+                messageStorage.postValue(R.string.it_first_page)
             }
         }
     }

@@ -7,9 +7,9 @@
 
     <fragment
         android:id="@+id/newsListFragment"
-        android:name="com.vvp.vestirss.ui.fragments.NewsListFragment"
+        android:name="com.vvp.vestirss.ui.fragments.ListFragment"
         android:label="fragment_news_list"
-        tools:layout="@layout/fragment_news_list" >
+        tools:layout="@layout/fragment_list" >
         <action
             android:id="@+id/action_to_newsDetailsFragment"
             app:destination="@id/newsDetailsFragment"
@@ -20,7 +20,7 @@
     </fragment>
     <fragment
         android:id="@+id/newsDetailsFragment"
-        android:name="com.vvp.vestirss.ui.fragments.NewsDetailsFragment"
+        android:name="com.vvp.vestirss.ui.fragments.DetailsFragment"
         android:label="fragment_news_details"
-        tools:layout="@layout/fragment_news_details" />
+        tools:layout="@layout/fragment_details" />
 </navigation>

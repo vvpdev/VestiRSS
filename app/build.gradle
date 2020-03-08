@@ -32,6 +32,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -77,4 +81,7 @@ dependencies {
     // navigation
     implementation "androidx.navigation:navigation-fragment-ktx:2.3.0-alpha02"
     implementation "androidx.navigation:navigation-ui-ktx:2.3.0-alpha02"
+
+    //leak canary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.2'
 }

@@ -11,10 +11,10 @@ import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
 import com.vvp.vestirss.viewmodels.DetailsViewModel
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_news_details.*
+import kotlinx.android.synthetic.main.fragment_details.*
 
 
-class NewsDetailsFragment : Fragment() {
+class DetailsFragment : Fragment() {
 
     private lateinit var viewModel: DetailsViewModel
 
@@ -23,7 +23,7 @@ class NewsDetailsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_news_details, container, false)
+        return inflater.inflate(R.layout.fragment_details, container, false)
     }
 
 

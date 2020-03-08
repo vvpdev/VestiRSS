@@ -25,7 +25,10 @@
 
 
 
-    <string name="no_new_data">последние новости уже загружены</string>
+    <string name="no_new_data">новых новостей нет. попробуйте обновить позже</string>
+    <string name="it_last_page">это последняя страница</string>
+    <string name="it_first_page">это самая первая страница</string>
+    <string name="data_already_loaded">последние новости уже загружены</string>
     <string name="new_data_uploaded">новые новости загружены</string>
     <string name="empty_data_from_db">Сохраненные данные отсутствуют. Потяните, чтобы загрузить свежие новости</string>
     <string name="empty_data_from_category">В выбранной категории новостей еще нет</string>
@@ -36,5 +39,6 @@
     <string name="data_deleted_successfully">данные успешно удалены</string>
     <string name="back_text_button">назад</string>
     <string name="next_text_button">вперед</string>
+    <string name="from">из</string>
 
 </resources>

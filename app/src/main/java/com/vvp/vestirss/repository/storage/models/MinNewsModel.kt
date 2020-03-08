@@ -8,6 +8,8 @@ data class MinNewsModel (
 
     var title: String? = null,
 
+    var imageUrl: String? = null,
+
     var pubDate: String? = null,
 
     var category: String? = null

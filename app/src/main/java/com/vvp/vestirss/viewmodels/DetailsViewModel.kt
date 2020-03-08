@@ -7,7 +7,6 @@ import com.vvp.vestirss.repository.RepositoryClass
 import com.vvp.vestirss.repository.storage.models.NewsModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,8 +14,6 @@ class DetailsViewModel: ViewModel() {
 
     @Inject
     lateinit var repository: RepositoryClass
-
-    private var loadJob: Job? = null
 
     // liveData для новости
     val newsInstance: MutableLiveData<NewsModel> =  MutableLiveData()
@@ -28,14 +25,13 @@ class DetailsViewModel: ViewModel() {
 
 
     fun getNews(id: Int){
-        loadJob = CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             newsInstance.postValue(repository.getNewsById(id = id))
         }
     }
 
 
     fun onDestroy(){
-        loadJob?.cancel()
         newsInstance.value = null
     }
 }

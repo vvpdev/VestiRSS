@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".ui.fragments.NewsDetailsFragment">
+    tools:context=".ui.fragments.DetailsFragment">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -18,6 +18,8 @@
                 android:id="@+id/imageNews"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
                 android:background="#FFFFFF"
                 android:visibility="visible" />
 

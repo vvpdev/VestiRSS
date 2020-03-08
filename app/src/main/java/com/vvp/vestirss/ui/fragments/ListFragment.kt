@@ -1,32 +1,38 @@
 package com.vvp.vestirss.ui.fragments
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.vvp.vestirss.R
 import com.vvp.vestirss.adapters.AdapterNewsList
 import com.vvp.vestirss.repository.storage.models.MinNewsModel
 import com.vvp.vestirss.viewmodels.ListViewModel
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_news_list.*
+import kotlinx.android.synthetic.main.control_buttons.*
+import kotlinx.android.synthetic.main.fragment_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.ButtonClick {
+class ListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.ButtonClick {
 
     // viewModel для экрана списка новостей
     private lateinit var viewModel: ListViewModel
 
     // for recyclerView
-    private lateinit var manager: LinearLayoutManager
+
+    private lateinit var manager: RecyclerView.LayoutManager
     private lateinit var adapter: AdapterNewsList
 
     override fun onCreateView(
@@ -34,25 +40,35 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_news_list, container, false)
+        return inflater.inflate(R.layout.fragment_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // заголовк в тулбаре
         activity!!.toolbar.title = getString(R.string.title_news_list_screen)
 
         // привязка viewModel к фрагменту
         viewModel = ViewModelProvider(this).get(ListViewModel::class.java)
 
 
-        //setup recyclerView
-        manager = LinearLayoutManager(activity!!.applicationContext, LinearLayoutManager.VERTICAL, false)
-        adapter = AdapterNewsList(listener = this, buttonsListener = this)
+
+       adapter = AdapterNewsList(listener = this, buttonsListener = this)
+
+       // orientation
+       val configuration: Configuration = resources.configuration
+
+        if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT){
+            manager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
+        }
+        else {
+            manager = GridLayoutManager(activity, 2)
+        }
+
+
+
         recyclerViewNewsList.layoutManager = manager
         recyclerViewNewsList.adapter = adapter
-
 
         // наблюдение за заполненностью БД
         viewModel.isSavedNews.observe(viewLifecycleOwner, Observer {
@@ -65,13 +81,14 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
         })
 
 
-        // изменение текущего состояния
+        // изменение текущего состояния списка новостей
         viewModel.newsList.observe(viewLifecycleOwner, Observer {
 
-                if (!it.isNullOrEmpty()){
-                    adapter.updateNews(newList = it)
+                if (it != null && !it.newsList.isNullOrEmpty()){
                     recyclerViewNewsList.visibility = View.VISIBLE
+                    adapter.updateNews(newsClass = it)
                     textViewMessage.visibility = View.GONE
+
                 } else {
                     recyclerViewNewsList.visibility = View.GONE
                     textViewMessage.visibility = View.VISIBLE
@@ -87,6 +104,13 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
 
         // swipe для загрузки новых данных
         swipeLoadNews.setOnRefreshListener { viewModel.separateLoad() }
+
+
+        // show toast
+        viewModel.messageStorage.observe(viewLifecycleOwner, Observer {
+            if (it != null){
+                Toast.makeText(activity, getText(it), Toast.LENGTH_SHORT).show()
+            } })
     }
 
 
@@ -100,7 +124,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when(item.itemId){
-            R.id.sort_item -> {  showSortScreen()  }                        // показ AlertDialog с категориями для сортировки
+            //R.id.sort_item -> {  showSortScreen()  }                        // показ AlertDialog с категориями для сортировки
             R.id.clear_data_base_item -> {  showDialogForClearDB()  }       // показ AlertDialog с вопросом о удалении
         }
         return super.onOptionsItemSelected(item)
@@ -108,22 +132,12 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
 
 
 
-
-    // переход к фрагменту деталировки и передача выбранной новости
+    // переход к фрагменту деталировки и передача id выбранной новости
     override fun onClick(view: View, news: MinNewsModel) {
         val newsBundle: Bundle = bundleOf("newsId" to news.id)
         findNavController().navigate(R.id.action_to_newsDetailsFragment, newsBundle)
     }
 
-
-
-    override fun onResume() {
-        super.onResume()
-
-        if (viewModel.newsList.value == null){
-            viewModel.loadFromDB()
-        }
-    }
 
 
     override fun onDestroyView() {
@@ -141,7 +155,7 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
             AlertDialog.Builder(it)
                 .setTitle(R.string.text_category)
                 .setItems(categoryList) { _, which ->
-                    viewModel.loadNewsFromCategory(category = categoryList[which])
+                   // viewModel.loadNewsFromCategory(category = categoryList[which])
                 }
                 .create()
                 .show()
@@ -163,6 +177,10 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
                 CoroutineScope(Dispatchers.IO).launch {
                     Glide.get(activity!!).clearDiskCache()
                 }
+
+                textViewMessage.visibility = View.VISIBLE
+                textViewMessage.text = getText(R.string.empty_data_from_db)
+
             }
             .setNegativeButton(R.string.answer_no) { dialog, _ ->
                 dialog.cancel()
@@ -173,14 +191,14 @@ class NewsListFragment : Fragment(), AdapterNewsList.ItemClick, AdapterNewsList.
     }
 
 
-
-    // кнопки для перехода на страницы новостей
-
     override fun onNextCLick() {
-        viewModel.loadNextPage()
+        viewModel.loadNextPage(currentIndex = (textCurrentNumber.text.toString()).toInt(),
+                               lastIndex = (textLastNumber.text.toString()).toInt())
     }
 
+
     override fun onBackCLick() {
-        viewModel.loadBackPage()
+        viewModel.loadBackPage(currentIndex = (textCurrentNumber.text.toString()).toInt(),
+                               lastIndex = (textLastNumber.text.toString()).toInt())
     }
 }

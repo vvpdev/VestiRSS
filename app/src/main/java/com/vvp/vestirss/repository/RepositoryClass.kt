@@ -4,13 +4,12 @@ import android.util.Log
 import com.vvp.vestirss.App
 import com.vvp.vestirss.repository.remote.DataProvider
 import com.vvp.vestirss.repository.storage.MethodsDAO
-import com.vvp.vestirss.repository.storage.models.LastIndex
+import com.vvp.vestirss.repository.storage.tools.LastIndex
 import com.vvp.vestirss.repository.storage.models.MinNewsModel
 import com.vvp.vestirss.repository.storage.models.NewsModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import com.vvp.vestirss.repository.storage.tools.NewsQuantity
+import com.vvp.vestirss.utils.NewsListClass
+import kotlinx.coroutines.*
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -29,30 +28,60 @@ class RepositoryClass {
     }
 
 
-    fun sizeNewsInDB(): Int{
-        return methodsDAO.getAllMinNews().size
+
+    // количество новостей в БД на данный момент
+    suspend fun getSavedNewsQuantity(): Int {
+
+        return CoroutineScope(Dispatchers.IO).async {
+             try {
+                val quantity = methodsDAO.getQuantityById(id = 1).quantity
+
+                Log.i("VestiRSS_Log", "RepositoryClass getSavedNewsQuantity количество новостей в БД = $quantity")
+
+                 return@async quantity
+
+            } catch (e: Exception){
+                0
+            }
+        }.await()
     }
 
 
-    // загрузка из БД
-    suspend fun loadFromDB(): ArrayList<MinNewsModel> {
+    // начальная загрузка из БД
+    suspend fun loadFromDB(): Any {
 
         return CoroutineScope(Dispatchers.IO).async {
 
             val loadFromDB: ArrayList<MinNewsModel> = ArrayList()
 
-            val lastIndex: LastIndex = methodsDAO.getLastIndexById(id = 1)
-
             try {
-                for (i in (lastIndex.lastIndex - 9) .. lastIndex.lastIndex){
-                    loadFromDB.add(methodsDAO.getMinNewsById(id = i))
+
+                val quantityNews = getSavedNewsQuantity()
+
+                if (quantityNews != 0){
+
+                    val lastIndex: LastIndex = methodsDAO.getLastIndexById(id = 1)
+
+                    Log.i("VestiRSS_Log", "RepositoryClass loadFromDB()  lastIndex = ${lastIndex.lastIndex}")
+
+                    for (i in (lastIndex.lastIndex - 9) .. lastIndex.lastIndex){
+                        loadFromDB.add(methodsDAO.getMinNewsById(id = i))
+                    }
+
+                    if ((quantityNews % 10) != 0){
+                        return@async NewsListClass(newsList = loadFromDB, currentNumber = 1, lastNumber = ((quantityNews / 10) + 1))
+                    }
+                    else{
+                        return@async NewsListClass(newsList = loadFromDB, currentNumber = 1, lastNumber = (quantityNews / 10))
+                    }
+                }
+                else{
+                    return@async NewsListClass(newsList = null, currentNumber = 0, lastNumber = 0)
                 }
             }
             catch (e: Exception){
-
+                return@async NewsListClass(newsList = null, currentNumber = 0, lastNumber = 0)
             }
-
-            return@async loadFromDB
         }.await()
     }
 
@@ -62,17 +91,19 @@ class RepositoryClass {
     fun clearDB(){
         CoroutineScope(Dispatchers.IO).launch {
             methodsDAO.deleteAllNews()
+            methodsDAO.insertQuantity(NewsQuantity(id = 1, quantity = 0))   // сброс количества
+
+            getSavedNewsQuantity()
         }
     }
 
 
     // начальное получение данных из сети и запись в БД
-    suspend fun loadInitialData(): ArrayList<MinNewsModel> {
+    suspend fun loadInitialData(): Boolean {
 
         return CoroutineScope(Dispatchers.IO).async {
 
             val initialNewsList: ArrayList<NewsModel> = ArrayList()
-            val initialMinNewsList: ArrayList<MinNewsModel> = ArrayList()
             initialNewsList.addAll( provider.getNewsList()  )
 
             if (initialNewsList.isNotEmpty()) {
@@ -80,19 +111,21 @@ class RepositoryClass {
                 // сортировка по возрастанию времени
                 initialNewsList.sortBy { it.pubDate }
 
+                // insert возвращает массив индексов записанных новостей
                 val longArray: LongArray = methodsDAO.insertNewsList(newsList = initialNewsList)
 
-                // индекс самой последней новости
+                // фиксируем количество сохраненных новостей
+                methodsDAO.insertQuantity(NewsQuantity(id = 1, quantity = longArray.size))
+
+                // фиксируем индекс самой "свежей" сохраненной новости
                 val lastIndex: Int = longArray[longArray.lastIndex].toInt()
+                methodsDAO.insertLastIndex( LastIndex(id = 1, lastIndex = lastIndex ))
 
-                methodsDAO.insertLastIndex(LastIndex(id = 1, lastIndex = lastIndex))
-
-
-                for (i in (lastIndex - 10) .. lastIndex){
-                    initialMinNewsList.add(methodsDAO.getMinNewsById(id = i))
-                }
+                return@async true
+            } else{
+                return@async false
             }
-            return@async initialMinNewsList
+
         }.await()
     }
 
@@ -100,15 +133,20 @@ class RepositoryClass {
 
 
     // подгрузка новых данных
-    suspend fun loadNewData(): Boolean {
+    suspend fun loadNewData(): Boolean {        // boolean - есть ли новые новости
 
         // промежуточный массив для данных, отобранных как новые
         val freshData: ArrayList<NewsModel> = ArrayList()
 
         return CoroutineScope(Dispatchers.IO).async {
 
-            val lastTitle = methodsDAO.getAllMinNews().last().title
+            // индекс последней новости
+            val lastIDNews = methodsDAO.getLastIndexById(id = 1).lastIndex
 
+            // title последней новости
+            val lastTitle = methodsDAO.getMinNewsById(id = lastIDNews).title
+
+            // получаем новые данные
             val newData = provider.getNewsList()
 
             if (!newData.isNullOrEmpty()){
@@ -117,7 +155,7 @@ class RepositoryClass {
                 if (lastTitle != newData[0].title) {
 
                     for (i in 0..newData.lastIndex) {
-                        if (newData[i].title != lastTitle) {
+                        if (newData[i].title != lastTitle) {    // проверка по заголовкам до совпадения
                             freshData.add(newData[i])
                         } else {
                             // прекращаем проверку
@@ -130,9 +168,13 @@ class RepositoryClass {
 
                     val longArray: LongArray = methodsDAO.insertNewsList(newsList = freshData)
 
+                    // обновляем индекс последней новости
                     val lastIndex: Int = longArray[longArray.lastIndex].toInt()
+                    methodsDAO.insertLastIndex( LastIndex(id = 1, lastIndex = lastIndex ))
 
-                    methodsDAO.insertLastIndex(LastIndex(id = 1, lastIndex = lastIndex))
+                    // обновляем количество сохраненных новостей в БД
+                    val oldQuantity = methodsDAO.getQuantityById(id = 1).quantity
+                    methodsDAO.insertQuantity(NewsQuantity(id = 1, quantity = (oldQuantity + freshData.size)))
 
                 } else{
                     return@async false
@@ -156,7 +198,7 @@ class RepositoryClass {
             if (category != "Все"){
                 sortList.addAll( methodsDAO.getAllMinNews(category = category) )
             } else {
-                sortList.addAll( methodsDAO.getAllMinNews())
+              //  sortList.addAll( loadFromDB() )
             }
         }
         return sortList
@@ -171,52 +213,53 @@ class RepositoryClass {
     }
 
 
+
     // переход по страницам
     suspend fun loadPage(nextPage: Boolean, index: Int): ArrayList<MinNewsModel> {
 
         return CoroutineScope(Dispatchers.IO).async {
 
             val lastIndex: Int = methodsDAO.getLastIndexById(id = 1).lastIndex
+            Log.i("VestiRSS_Log", "RepositoryClass loadPage lastIndex= $lastIndex")
+
+            val quantity = getSavedNewsQuantity()
 
             val newsList: ArrayList<MinNewsModel> = ArrayList()
 
-            if (nextPage) {
+            when(nextPage){
 
-                for (i in (index + 1) until (index +11)) {
+                // листание вперед - next
+                true -> {
 
-                    if (i != (lastIndex + 1)) {
+                    var i: Int = index -1
 
+                    while (newsList.size != 10 && i != (lastIndex - quantity) ){
                         newsList.add(methodsDAO.getMinNewsById(id = i))
+                        i -= 1
                     }
-                    else {
-                        break
-                    }
+
+                    newsList.sortBy { it.pubDate }
                 }
-            }
 
-            else {
 
-                if (index >= 10) {
-                    for (i in (index - 10) until index) {
+                // листание назад - back
+                false -> {
 
-                        if (i != 0){
+                    if (index != (lastIndex + 1)){
+
+                        var i: Int = index + 1
+
+                        while (newsList.size != 10 && i != (lastIndex + 1))  {
                             newsList.add(methodsDAO.getMinNewsById(id = i))
+                            i++
                         }
-                    }
-                }
-                else{
 
-                    for (i in 1 until index){
-                        newsList.add(methodsDAO.getMinNewsById(id = i))
+                        newsList.sortBy { it.pubDate }
                     }
                 }
+
             }
             return@async newsList
-
         }.await()
     }
-
-
-
-
 }
