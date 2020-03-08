@@ -9,6 +9,7 @@
   - показ и скрытие кнопки очистки БД в тулбаре в зависимости от наличия сохраненных новостей
   
 minSdk - 23 (Android 6)
+
 Navigation component, Retrofit (+ XmlPullParser), Kotlin Coroutines, MVVM, Glide, Room, Dagger2
 
 
